@@ -1,0 +1,29 @@
+import express, { Request, Response } from "express";
+import cors from "cors";
+import userRoutes from "./routes/User";
+import loginRoutes from "./routes/Login";
+import productRoutes from "./routes/productRoute";
+import categoryRoutes from "./routes/categoryRoute";
+import cartRoutes from "./routes/cartRoute";
+import orderRoutes from "./routes/orderRoute";
+
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.use("/api/users", userRoutes);
+app.use("/api/auth", loginRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
+
+app.get("/", (req: Request, res: Response) => {
+  res.json({
+    message: "Novamart API is running 🚀",
+  });
+});
+
+export default app;
