@@ -61,14 +61,21 @@ export const createOrder = async (
     // 5. Calculate the order total
     let total = 0;
 
-    for (let i = 0; i < cartItems.length; i++) {
-      const item = cartItems[i];
-      const product = products[i];
+   for (let i = 0; i < cartItems.length; i++) {
+  const item = cartItems[i];
+  const product = products[i];
 
-      if (product) {
-        total += Number(product.price) * item.quantity;
-      }
+  if (product) {
+    if (product.stock < item.quantity) {
+      res.status(400).json({
+        message: `Not enough stock for ${product.name}.`,
+      });
+      return;
     }
+
+    total += Number(product.price) * item.quantity;
+  }
+}
 
     // 6. Create the order
     const order = await Order.create({
@@ -79,12 +86,13 @@ export const createOrder = async (
 
     // 7. Create order items
     for (const item of cartItems) {
-      await OrderItem.create({
-        orderId: order.id,
-        productId: item.productId,
-        quantity: item.quantity,
-      });
-    }
+  const product = await Product.findByPk(item.productId);
+
+  if (product) {
+    product.stock -= item.quantity;
+    await product.save();
+  }
+}
 
     // 8. Clear the cart
     await CartItem.destroy({
@@ -164,6 +172,16 @@ export const getOrderById = async (
         id,
         userId,
       },
+      include: [
+        {
+          model: OrderItem,
+          include: [
+            {
+              model: Product,
+            },
+          ],
+        },
+      ],
     });
 
     if (!order) {
@@ -242,8 +260,6 @@ export const updateOrder = async (
 };
 
 
-
-
 export const deleteOrder = async (
   req: Request,
   res: Response
@@ -259,6 +275,7 @@ export const deleteOrder = async (
   }
 
   try {
+    // 1. Find the order belonging to the logged-in user
     const order = await Order.findOne({
       where: {
         id,
@@ -273,8 +290,17 @@ export const deleteOrder = async (
       return;
     }
 
+    // 2. Delete all order items belonging to this order
+    await OrderItem.destroy({
+      where: {
+        orderId: order.id,
+      },
+    });
+
+    // 3. Delete the order
     await order.destroy();
 
+    // 4. Send success response
     res.status(200).json({
       message: "Order deleted successfully.",
     });

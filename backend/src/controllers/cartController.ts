@@ -115,15 +115,33 @@ export const updateCartItem = async (
     return;
   }
 
-  const cartItem = await CartItem.findByPk(id);
+ const cartItem = await CartItem.findByPk(id);
 
-  if (!cartItem) {
-    res.status(404).json({
-      message: "Cart item not found.",
-    });
+if (!cartItem) {
+  res.status(404).json({
+    message: "Cart item not found.",
+  });
 
-    return;
-  }
+  return;
+}
+
+const product = await Product.findByPk(cartItem.productId);
+
+if (!product) {
+  res.status(404).json({
+    message: "Product not found.",
+  });
+
+  return;
+}
+
+if (product.stock < quantity) {
+  res.status(400).json({
+    message: `Not enough stock for ${product.name}.`,
+  });
+
+  return;
+}
 
   const userId = req.user?.id;
 
