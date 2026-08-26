@@ -7,22 +7,39 @@ export const createProduct = async (
 ): Promise<void> => {
   const { name, description, price, stock } = req.body;
 
-  if (!name || !description || !price || !stock) {
+
+  if (!name || !description || price === undefined || stock === undefined) {
     res.status(400).json({
       message: "All fields are required.",
     });
 
     return;
   }
-    
-   const product = await Product.create({
-  name,
-  description,
-  price,
-  stock,
-   });
 
-    res.status(201).json({
+  if (price <= 0) {
+    res.status(400).json({
+      message: "Price must be greater than 0.",
+    });
+
+    return;
+  }
+
+  if (stock < 0) {
+    res.status(400).json({
+      message: "Stock cannot be negative.",
+    });
+
+    return;
+  }
+
+  const product = await Product.create({
+    name,
+    description,
+    price,
+    stock,
+  });
+
+  res.status(201).json({
     message: "Product created successfully.",
     product,
   });
@@ -42,13 +59,30 @@ export const updateProduct = async (
   const { name, description, price, stock } = req.body;
 
   // 3. Validate the fields
-  if (!name || !description || price === undefined || stock === undefined) {
-    res.status(400).json({
-      message: "All fields are required.",
-    });
 
-    return;
-  }
+if (!name || !description || price === undefined || stock === undefined) {
+  res.status(400).json({
+    message: "All fields are required.",
+  });
+
+  return;
+}
+
+if (price <= 0) {
+  res.status(400).json({
+    message: "Price must be greater than 0.",
+  });
+
+  return;
+}
+
+if (stock < 0) {
+  res.status(400).json({
+    message: "Stock cannot be negative.",
+  });
+
+  return;
+}
 
   // 4. Find the product in the database
   const product = await Product.findByPk(id);
@@ -138,5 +172,4 @@ export const deleteProduct = async (
     message: "Product deleted successfully.",
   });
 };
-
 
