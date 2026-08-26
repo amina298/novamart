@@ -73,23 +73,43 @@ export const addToCart = async (
   });
 
   if (existingItem) {
-    existingItem.quantity += quantity;
+  const newQuantity = existingItem.quantity + quantity;
 
-    await existingItem.save();
-
-    res.status(200).json({
-      message: "Cart updated successfully.",
-      cartItem: existingItem,
+  if (newQuantity > product.stock) {
+    res.status(400).json({
+      message: `Not enough stock for ${product.name}.`,
     });
 
     return;
   }
 
-  const cartItem = await CartItem.create({
-    cartId: cart.id,
-    productId,
-    quantity,
+  existingItem.quantity = newQuantity;
+
+  await existingItem.save();
+
+  res.status(200).json({
+    message: "Cart updated successfully.",
+    cartItem: existingItem,
   });
+
+  return;
+  }
+  
+
+ if (quantity > product.stock) {
+  res.status(400).json({
+    message: `Not enough stock for ${product.name}.`,
+  });
+
+  return;
+}
+
+const cartItem = await CartItem.create({
+  cartId: cart.id,
+  productId,
+  quantity,
+});
+  
 
   res.status(201).json({
     message: "Product added to cart successfully.",
