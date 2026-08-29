@@ -84,11 +84,20 @@ export const createOrder = async (
       status: "pending",
     });
 
-    // 7. Create order items
-    for (const item of cartItems) {
+    
+  // 7. Create order items and reduce stock
+for (const item of cartItems) {
   const product = await Product.findByPk(item.productId);
 
   if (product) {
+    // Create the order item
+    await OrderItem.create({
+      orderId: order.id,
+      productId: item.productId,
+      quantity: item.quantity,
+    });
+
+    // Reduce product stock
     product.stock -= item.quantity;
     await product.save();
   }
@@ -315,7 +324,6 @@ export const deleteOrder = async (
 
 
 
-
 export const cancelOrder = async (
   req: Request,
   res: Response
@@ -332,6 +340,7 @@ export const cancelOrder = async (
   }
 
   try {
+    // 1. Find the order belonging to the logged-in user
     const order = await Order.findOne({
       where: {
         id,
@@ -347,6 +356,7 @@ export const cancelOrder = async (
       return;
     }
 
+    // 2. Only pending orders can be cancelled
     if (order.status !== "pending") {
       res.status(400).json({
         message: "Only pending orders can be cancelled.",
@@ -355,12 +365,31 @@ export const cancelOrder = async (
       return;
     }
 
+    // 3. Get the items belonging to this order
+    const orderItems = await OrderItem.findAll({
+      where: {
+        orderId: order.id,
+      },
+    });
+
+    // 4. Restore the stock for each product
+    for (const item of orderItems) {
+      const product = await Product.findByPk(item.productId);
+
+      if (product) {
+        product.stock += item.quantity;
+        await product.save();
+      }
+    }
+
+    // 5. Mark the order as cancelled
     order.status = "cancelled";
 
     await order.save();
 
+    // 6. Return the cancelled order
     res.status(200).json({
-      message: "Order cancelled successfully.",
+      message: "Order cancelled and stock restored successfully.",
       order,
     });
   } catch (error) {
