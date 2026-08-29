@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth";
+import { requireAdmin } from "../middleware/authorization";
 
 import {
   createOrder,
@@ -7,6 +8,7 @@ import {
   getOrderById,
   updateOrder,
   deleteOrder,
+  cancelOrder
 } from "../controllers/orderController";
 
 const router = Router();
@@ -21,9 +23,11 @@ router.get("/", authenticate, getOrders);
 router.get("/:id", authenticate, getOrderById);
 
 // Update an order
-router.put("/:id", authenticate, updateOrder);
+router.put("/:id", authenticate, requireAdmin, updateOrder);
 
 // Delete an order
 router.delete("/:id", authenticate, deleteOrder);
+
+router.patch("/:id/cancel", authenticate, cancelOrder);
 
 export default router;

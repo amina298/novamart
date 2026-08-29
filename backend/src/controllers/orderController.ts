@@ -312,3 +312,62 @@ export const deleteOrder = async (
     });
   }
 };
+
+
+
+
+export const cancelOrder = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const userId = req.user?.id;
+  const { id } = req.params;
+
+  if (!userId) {
+    res.status(401).json({
+      message: "Unauthorized.",
+    });
+
+    return;
+  }
+
+  try {
+    const order = await Order.findOne({
+      where: {
+        id,
+        userId,
+      },
+    });
+
+    if (!order) {
+      res.status(404).json({
+        message: "Order not found.",
+      });
+
+      return;
+    }
+
+    if (order.status !== "pending") {
+      res.status(400).json({
+        message: "Only pending orders can be cancelled.",
+      });
+
+      return;
+    }
+
+    order.status = "cancelled";
+
+    await order.save();
+
+    res.status(200).json({
+      message: "Order cancelled successfully.",
+      order,
+    });
+  } catch (error) {
+    console.error("Cancel order error:", error);
+
+    res.status(500).json({
+      message: "Failed to cancel order.",
+    });
+  }
+};
