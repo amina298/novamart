@@ -212,8 +212,6 @@ export const getOrderById = async (
   }
 };
 
-
-
 export const updateOrder = async (
   req: Request,
   res: Response
@@ -222,21 +220,42 @@ export const updateOrder = async (
   const { id } = req.params;
   const { status } = req.body;
 
+  // 1. Check if the user is authenticated
   if (!userId) {
     res.status(401).json({
       message: "Unauthorized.",
     });
+
     return;
   }
 
+  // 2. Check if status was provided
   if (!status) {
     res.status(400).json({
       message: "Status is required.",
     });
+
+    return;
+  }
+
+  // 3. Check if the status is valid
+  const allowedStatuses = [
+    "pending",
+    "shipped",
+    "delivered",
+    "cancelled",
+  ];
+
+  if (!allowedStatuses.includes(status)) {
+    res.status(400).json({
+      message: "Invalid order status.",
+    });
+
     return;
   }
 
   try {
+    // 4. Find the order
     const order = await Order.findOne({
       where: {
         id,
@@ -244,17 +263,41 @@ export const updateOrder = async (
       },
     });
 
+    // 5. Check if the order exists
     if (!order) {
       res.status(404).json({
         message: "Order not found.",
       });
+
       return;
     }
 
+    // 6. Define allowed status transitions
+    const validTransitions: Record<string, string[]> = {
+      pending: ["shipped", "cancelled"],
+      shipped: ["delivered"],
+      delivered: [],
+      cancelled: [],
+    };
+
+    // 7. Get the allowed transitions for the current status
+    const allowedTransitions = validTransitions[order.status] || [];
+
+    // 8. Check if the requested transition is allowed
+    if (!allowedTransitions.includes(status)) {
+      res.status(400).json({
+        message: `Cannot change order status from ${order.status} to ${status}.`,
+      });
+
+      return;
+    }
+
+    // 9. Update the order status
     order.status = status;
 
     await order.save();
 
+    // 10. Return the updated order
     res.status(200).json({
       message: "Order updated successfully.",
       order,
