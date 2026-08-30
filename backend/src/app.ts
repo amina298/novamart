@@ -8,6 +8,7 @@ import cartRoutes from "./routes/cartRoute";
 import orderRoutes from "./routes/orderRoute";
 import adminOrderRoutes from "./admin/routes/adminOrderRoute";
 import adminProductRoutes from "./admin/routes/adminProductRoute";
+import adminUserRoutes from "./admin/routes/adminUserRoute";
 
 
 const app = express();
@@ -23,6 +24,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/admin/products", adminProductRoutes);
+app.use("/api/admin/users", adminUserRoutes);
 
 
 app.get("/", (req: Request, res: Response) => {
