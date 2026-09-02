@@ -4,6 +4,7 @@ import Cart from "./cartModel";
 import CartItem from "./cartItemModel";
 import Order from "./orderModel";
 import OrderItem from "./orderItemModel";
+import Payment from "./paymentModel";
 
 User.hasOne(Cart, {
   foreignKey: "userId",
@@ -54,6 +55,16 @@ Product.hasMany(OrderItem, {
 
 OrderItem.belongsTo(Product, {
   foreignKey: "productId",
+});
+
+// Order → Payment
+
+Order.hasOne(Payment, {
+  foreignKey: "orderId",
+});
+
+Payment.belongsTo(Order, {
+  foreignKey: "orderId",
 });
 
 export {};

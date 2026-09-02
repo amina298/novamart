@@ -9,6 +9,8 @@ import orderRoutes from "./routes/orderRoute";
 import adminOrderRoutes from "./admin/routes/adminOrderRoute";
 import adminProductRoutes from "./admin/routes/adminProductRoute";
 import adminUserRoutes from "./admin/routes/adminUserRoute";
+import paymentRoutes from "./routes/paymentRoute";
+import adminPaymentRoutes from "./admin/routes/adminPaymentRoute";
 
 
 const app = express();
@@ -25,7 +27,11 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/admin/products", adminProductRoutes);
 app.use("/api/admin/users", adminUserRoutes);
-
+app.use("/api/payments", paymentRoutes);
+app.use(
+  "/api/admin/payments",
+  adminPaymentRoutes
+);
 
 app.get("/", (req: Request, res: Response) => {
   res.json({
