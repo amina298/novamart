@@ -12,6 +12,7 @@ import adminUserRoutes from "./admin/routes/adminUserRoute";
 import paymentRoutes from "./routes/paymentRoute";
 import adminPaymentRoutes from "./admin/routes/adminPaymentRoute";
 import reviewRoutes from "./routes/reviewRoute";
+import wishlistRoutes from "./routes/wishlistRoute";
 
 
 const app = express();
@@ -34,6 +35,7 @@ app.use(
   adminPaymentRoutes
 );
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.json({
