@@ -9,6 +9,7 @@ import "./models/cartItemModel";
 import "./models/orderModel";
 import "./models/orderItemModel";
 import "./models/paymentModel";
+import "./models/reviewModel";
 import "./models/association";
 
 dotenv.config();

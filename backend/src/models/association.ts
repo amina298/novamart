@@ -5,6 +5,8 @@ import CartItem from "./cartItemModel";
 import Order from "./orderModel";
 import OrderItem from "./orderItemModel";
 import Payment from "./paymentModel";
+import Review from "./reviewModel";
+import Wishlist from "./wishlistModel";
 
 User.hasOne(Cart, {
   foreignKey: "userId",
@@ -65,6 +67,41 @@ Order.hasOne(Payment, {
 
 Payment.belongsTo(Order, {
   foreignKey: "orderId",
+});
+
+
+User.hasMany(Review, {
+  foreignKey: "userId",
+});
+
+Review.belongsTo(User, {
+  foreignKey: "userId",
+});
+
+
+Product.hasMany(Review, {
+  foreignKey: "productId",
+});
+
+Review.belongsTo(Product, {
+  foreignKey: "productId",
+});
+
+
+User.hasMany(Wishlist, {
+  foreignKey: "userId",
+});
+
+Wishlist.belongsTo(User, {
+  foreignKey: "userId",
+});
+
+Product.hasMany(Wishlist, {
+  foreignKey: "productId",
+});
+
+Wishlist.belongsTo(Product, {
+  foreignKey: "productId",
 });
 
 export {};
