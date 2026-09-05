@@ -1,5 +1,8 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./config/swagger";
+
 import userRoutes from "./routes/User";
 import loginRoutes from "./routes/Login";
 import productRoutes from "./routes/productRoute";
@@ -36,6 +39,7 @@ app.use(
 );
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get("/", (req: Request, res: Response) => {
   res.json({
