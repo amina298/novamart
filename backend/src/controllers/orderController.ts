@@ -4,92 +4,88 @@ import CartItem from "../models/cartItemModel";
 import Product from "../models/productModel";
 import Order from "../models/orderModel";
 import OrderItem from "../models/orderItemModel";
+import AppError from "../utils/AppError";
 
 export const createOrder = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-    const userId = req.user?.id;
+  const userId = req.user?.id;
 
-     if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-    return;
+  if (!userId) {
+    throw new AppError("Unauthorized.", 401);
   }
 
-  try {
-    // 1. Find the user's cart
-    const cart = await Cart.findOne({
-      where: { userId },
-    });
+  // 1. Find the user's cart
+  const cart = await Cart.findOne({
+    where: { userId },
+  });
 
-    if (!cart) {
-      res.status(404).json({
-        message: "Cart not found.",
-      });
-      return;
-    }
+  if (!cart) {
+    throw new AppError("Cart not found.", 404);
+  }
 
-    // 2. Get all items in the cart
-    const cartItems = await CartItem.findAll({
-      where: {
-        cartId: cart.id,
-      },
-    });
+  // 2. Get all items in the cart
+  const cartItems = await CartItem.findAll({
+    where: {
+      cartId: cart.id,
+    },
+  });
 
-    if (cartItems.length === 0) {
-      res.status(400).json({
-        message: "Cart is empty.",
-      });
-      return;
-    }
+  if (cartItems.length === 0) {
+    throw new AppError("Cart is empty.", 400);
+  }
 
-    // 3. Find the products for each cart item
-    const products = await Promise.all(
-      cartItems.map((item) => Product.findByPk(item.productId))
+  // 3. Find the products for each cart item
+  const products = await Promise.all(
+    cartItems.map((item) => Product.findByPk(item.productId))
+  );
+
+  // 4. Check that all products exist
+  if (products.some((product) => !product)) {
+    throw new AppError(
+      "One or more products not found.",
+      404
     );
+  }
 
-    // 4. Check that all products exist
-    if (products.some((product) => !product)) {
-      res.status(404).json({
-        message: "One or more products not found.",
-      });
-      return;
+  // 5. Calculate the order total
+  let total = 0;
+
+  for (let i = 0; i < cartItems.length; i++) {
+    const item = cartItems[i];
+    const product = products[i];
+
+    if (!product) {
+      throw new AppError("Product not found.", 404);
     }
 
-    // 5. Calculate the order total
-    let total = 0;
-
-   for (let i = 0; i < cartItems.length; i++) {
-  const item = cartItems[i];
-  const product = products[i];
-
-  if (product) {
     if (product.stock < item.quantity) {
-      res.status(400).json({
-        message: `Not enough stock for ${product.name}.`,
-      });
-      return;
+      throw new AppError(
+        `Not enough stock for ${product.name}.`,
+        400
+      );
     }
 
     total += Number(product.price) * item.quantity;
   }
-}
 
-    // 6. Create the order
-    const order = await Order.create({
-      userId,
-      total,
-      status: "pending",
-    });
+  // 6. Create the order
+  const order = await Order.create({
+    userId,
+    total,
+    status: "pending",
+  });
 
-    
   // 7. Create order items and reduce stock
-for (const item of cartItems) {
-  const product = await Product.findByPk(item.productId);
+  for (let i = 0; i < cartItems.length; i++) {
+    const item = cartItems[i];
+    const product = products[i];
 
-  if (product) {
+    if (!product) {
+      throw new AppError("Product not found.", 404);
+    }
+
     // Create the order item
     await OrderItem.create({
       orderId: order.id,
@@ -99,32 +95,23 @@ for (const item of cartItems) {
 
     // Reduce product stock
     product.stock -= item.quantity;
+
     await product.save();
   }
-}
 
-    // 8. Clear the cart
-    await CartItem.destroy({
-      where: {
-        cartId: cart.id,
-      },
-    });
+  // 8. Clear the cart
+  await CartItem.destroy({
+    where: {
+      cartId: cart.id,
+    },
+  });
 
-    // 9. Return the created order
-    res.status(201).json({
-      message: "Order created successfully.",
-      order,
-    });
-  } catch (error) {
-    console.error("Create order error:", error);
-
-    res.status(500).json({
-      message: "Failed to create order.",
-    });
-  }
+  // 9. Return the created order
+  res.status(201).json({
+    message: "Order created successfully.",
+    order,
+  });
 };
-
-
 
 
 export const getOrders = async (
@@ -134,31 +121,19 @@ export const getOrders = async (
   const userId = req.user?.id;
 
   if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
-  try {
-    const orders = await Order.findAll({
-      where: {
-        userId,
-      },
-    });
+  const orders = await Order.findAll({
+    where: {
+      userId,
+    },
+  });
 
-    res.status(200).json({
-      orders,
-    });
-  } catch (error) {
-    console.error("Get orders error:", error);
-
-    res.status(500).json({
-      message: "Failed to get orders.",
-    });
-  }
+  res.status(200).json({
+    orders,
+  });
 };
-
 
 
 export const getOrderById = async (
@@ -169,48 +144,35 @@ export const getOrderById = async (
   const { id } = req.params;
 
   if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
-  try {
-    const order = await Order.findOne({
-      where: {
-        id,
-        userId,
+  const order = await Order.findOne({
+    where: {
+      id,
+      userId,
+    },
+    include: [
+      {
+        model: OrderItem,
+        include: [
+          {
+            model: Product,
+          },
+        ],
       },
-      include: [
-        {
-          model: OrderItem,
-          include: [
-            {
-              model: Product,
-            },
-          ],
-        },
-      ],
-    });
+    ],
+  });
 
-    if (!order) {
-      res.status(404).json({
-        message: "Order not found.",
-      });
-      return;
-    }
-
-    res.status(200).json({
-      order,
-    });
-  } catch (error) {
-    console.error("Get order error:", error);
-
-    res.status(500).json({
-      message: "Failed to get order.",
-    });
+  if (!order) {
+    throw new AppError("Order not found.", 404);
   }
+
+  res.status(200).json({
+    order,
+  });
 };
+
 
 export const updateOrder = async (
   req: Request,
@@ -220,22 +182,14 @@ export const updateOrder = async (
   const { id } = req.params;
   const { status } = req.body;
 
-  // 1. Check if the user is authenticated
+  // 1. Check authentication
   if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
   // 2. Check if status was provided
   if (!status) {
-    res.status(400).json({
-      message: "Status is required.",
-    });
-
-    return;
+    throw new AppError("Status is required.", 400);
   }
 
   // 3. Check if the status is valid
@@ -247,68 +201,51 @@ export const updateOrder = async (
   ];
 
   if (!allowedStatuses.includes(status)) {
-    res.status(400).json({
-      message: "Invalid order status.",
-    });
-
-    return;
+    throw new AppError("Invalid order status.", 400);
   }
 
-  try {
-    // 4. Find the order
-    const order = await Order.findOne({
-      where: {
-        id,
-        userId,
-      },
-    });
+  // 4. Find the order belonging to the logged-in user
+  const order = await Order.findOne({
+    where: {
+      id,
+      userId,
+    },
+  });
 
-    // 5. Check if the order exists
-    if (!order) {
-      res.status(404).json({
-        message: "Order not found.",
-      });
-
-      return;
-    }
-
-    // 6. Define allowed status transitions
-    const validTransitions: Record<string, string[]> = {
-      pending: ["shipped", "cancelled"],
-      shipped: ["delivered"],
-      delivered: [],
-      cancelled: [],
-    };
-
-    // 7. Get the allowed transitions for the current status
-    const allowedTransitions = validTransitions[order.status] || [];
-
-    // 8. Check if the requested transition is allowed
-    if (!allowedTransitions.includes(status)) {
-      res.status(400).json({
-        message: `Cannot change order status from ${order.status} to ${status}.`,
-      });
-
-      return;
-    }
-
-    // 9. Update the order status
-    order.status = status;
-
-    await order.save();
-
-    // 10. Return the updated order
-    res.status(200).json({
-      message: "Order updated successfully.",
-      order,
-    });
-  } catch (error) {
-    console.error("Update order error:", error);
-
-    res.status(500).json({
-      message: "Failed to update order.",
-    });
+  if (!order) {
+    throw new AppError("Order not found.", 404);
   }
+
+  // 5. Define allowed status transitions
+  const validTransitions: Record<string, string[]> = {
+    pending: ["shipped", "cancelled"],
+    shipped: ["delivered"],
+    delivered: [],
+    cancelled: [],
+  };
+
+  // 6. Get the allowed transitions
+  const allowedTransitions =
+    validTransitions[order.status] || [];
+
+  // 7. Check if the requested transition is allowed
+  if (!allowedTransitions.includes(status)) {
+    throw new AppError(
+      `Cannot change order status from ${order.status} to ${status}.`,
+      400
+    );
+  }
+
+  // 8. Update the order status
+  order.status = status;
+
+  await order.save();
+
+  // 9. Return the updated order
+  res.status(200).json({
+    message: "Order updated successfully.",
+    order,
+  });
 };
 
 
@@ -320,51 +257,35 @@ export const deleteOrder = async (
   const { id } = req.params;
 
   if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
-  try {
-    // 1. Find the order belonging to the logged-in user
-    const order = await Order.findOne({
-      where: {
-        id,
-        userId,
-      },
-    });
+  // Find the order belonging to the logged-in user
+  const order = await Order.findOne({
+    where: {
+      id,
+      userId,
+    },
+  });
 
-    if (!order) {
-      res.status(404).json({
-        message: "Order not found.",
-      });
-      return;
-    }
-
-    // 2. Delete all order items belonging to this order
-    await OrderItem.destroy({
-      where: {
-        orderId: order.id,
-      },
-    });
-
-    // 3. Delete the order
-    await order.destroy();
-
-    // 4. Send success response
-    res.status(200).json({
-      message: "Order deleted successfully.",
-    });
-  } catch (error) {
-    console.error("Delete order error:", error);
-
-    res.status(500).json({
-      message: "Failed to delete order.",
-    });
+  if (!order) {
+    throw new AppError("Order not found.", 404);
   }
+
+  // Delete all order items belonging to this order
+  await OrderItem.destroy({
+    where: {
+      orderId: order.id,
+    },
+  });
+
+  // Delete the order
+  await order.destroy();
+
+  res.status(200).json({
+    message: "Order deleted successfully.",
+  });
 };
-
 
 
 export const cancelOrder = async (
@@ -375,71 +296,54 @@ export const cancelOrder = async (
   const { id } = req.params;
 
   if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
-  try {
-    // 1. Find the order belonging to the logged-in user
-    const order = await Order.findOne({
-      where: {
-        id,
-        userId,
-      },
-    });
+  // Find the order belonging to the logged-in user
+  const order = await Order.findOne({
+    where: {
+      id,
+      userId,
+    },
+  });
 
-    if (!order) {
-      res.status(404).json({
-        message: "Order not found.",
-      });
-
-      return;
-    }
-
-    // 2. Only pending orders can be cancelled
-    if (order.status !== "pending") {
-      res.status(400).json({
-        message: "Only pending orders can be cancelled.",
-      });
-
-      return;
-    }
-
-    // 3. Get the items belonging to this order
-    const orderItems = await OrderItem.findAll({
-      where: {
-        orderId: order.id,
-      },
-    });
-
-    // 4. Restore the stock for each product
-    for (const item of orderItems) {
-      const product = await Product.findByPk(item.productId);
-
-      if (product) {
-        product.stock += item.quantity;
-        await product.save();
-      }
-    }
-
-    // 5. Mark the order as cancelled
-    order.status = "cancelled";
-
-    await order.save();
-
-    // 6. Return the cancelled order
-    res.status(200).json({
-      message: "Order cancelled and stock restored successfully.",
-      order,
-    });
-  } catch (error) {
-    console.error("Cancel order error:", error);
-
-    res.status(500).json({
-      message: "Failed to cancel order.",
-    });
+  if (!order) {
+    throw new AppError("Order not found.", 404);
   }
+
+  // Only pending orders can be cancelled
+  if (order.status !== "pending") {
+    throw new AppError(
+      "Only pending orders can be cancelled.",
+      400
+    );
+  }
+
+  // Get the items belonging to this order
+  const orderItems = await OrderItem.findAll({
+    where: {
+      orderId: order.id,
+    },
+  });
+
+  // Restore the stock for each product
+  for (const item of orderItems) {
+    const product = await Product.findByPk(item.productId);
+
+    if (product) {
+      product.stock += item.quantity;
+      await product.save();
+    }
+  }
+
+  // Mark the order as cancelled
+  order.status = "cancelled";
+
+  await order.save();
+
+  // Return the cancelled order
+  res.status(200).json({
+    message: "Order cancelled and stock restored successfully.",
+    order,
+  });
 };

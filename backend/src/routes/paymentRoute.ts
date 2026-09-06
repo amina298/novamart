@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth";
-import { createPayment, getMyPayments, getMyPaymentById } from "../controllers/paymentController";
+import {
+  createPayment,
+  getMyPayments,
+  getMyPaymentById,
+} from "../controllers/paymentController";
 
 const router = Router();
 
@@ -29,9 +33,6 @@ const router = Router();
  *               paymentMethod:
  *                 type: string
  *                 example: mpesa
- *               transactionId:
- *                 type: string
- *                 example: MPESA123456
  *     responses:
  *       201:
  *         description: Payment created successfully
@@ -39,16 +40,12 @@ const router = Router();
  *         description: Invalid payment data
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: You cannot pay for this order
  *       404:
  *         description: Order not found
- *       500:
- *         description: Failed to create payment
  */
-router.post(
-  "/",
-  authenticate,
-  createPayment
-);
+router.post("/", authenticate, createPayment);
 
 
 /**
@@ -65,14 +62,9 @@ router.post(
  *         description: Payments retrieved successfully
  *       401:
  *         description: Unauthorized
- *       500:
- *         description: Failed to get payments
  */
-router.get(
-  "/",
-  authenticate,
-  getMyPayments
-);
+router.get("/", authenticate, getMyPayments);
+
 
 /**
  * @swagger
@@ -97,12 +89,7 @@ router.get(
  *         description: Unauthorized
  *       404:
  *         description: Payment not found
- *       500:
- *         description: Failed to get payment
  */
-router.get(
-  "/:id",
-  authenticate,
-  getMyPaymentById
-);
+router.get("/:id", authenticate, getMyPaymentById);
+
 export default router;

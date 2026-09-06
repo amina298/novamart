@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Payment from "../models/paymentModel";
 import Order from "../models/orderModel";
+import AppError from "../utils/AppError";
 
 export const createPayment = async (
   req: Request,
@@ -11,90 +12,73 @@ export const createPayment = async (
 
   // Check authentication
   if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
   // Validate required fields
   if (!orderId || !paymentMethod) {
-    res.status(400).json({
-      message: "Order ID and payment method are required.",
-    });
-    return;
+    throw new AppError(
+      "Order ID and payment method are required.",
+      400
+    );
   }
 
   // Validate payment method
   const allowedMethods = ["mpesa", "card", "cash"];
 
   if (!allowedMethods.includes(paymentMethod)) {
-    res.status(400).json({
-      message: "Invalid payment method.",
-    });
-    return;
+    throw new AppError("Invalid payment method.", 400);
   }
 
-  try {
-    // Find the order
-    const order = await Order.findByPk(orderId);
+  // Find the order
+  const order = await Order.findByPk(orderId);
 
-    if (!order) {
-      res.status(404).json({
-        message: "Order not found.",
-      });
-      return;
-    }
+  if (!order) {
+    throw new AppError("Order not found.", 404);
+  }
 
-    // Make sure the order belongs to the logged-in user
-    if (order.userId !== userId) {
-      res.status(403).json({
-        message: "You cannot pay for this order.",
-      });
-      return;
-    }
+  // Make sure the order belongs to the logged-in user
+  if (order.userId !== userId) {
+    throw new AppError(
+      "You cannot pay for this order.",
+      403
+    );
+  }
 
-    // Cancelled orders cannot be paid
-    if (order.status === "cancelled") {
-      res.status(400).json({
-        message: "Cancelled orders cannot be paid.",
-      });
-      return;
-    }
+  // Cancelled orders cannot be paid
+  if (order.status === "cancelled") {
+    throw new AppError(
+      "Cancelled orders cannot be paid.",
+      400
+    );
+  }
 
-    // Check if the order already has a payment
-    const existingPayment = await Payment.findOne({
-      where: {
-        orderId: order.id,
-      },
-    });
-
-    if (existingPayment) {
-      res.status(400).json({
-        message: "Payment already exists for this order.",
-      });
-      return;
-    }
-
-    // Create payment using the order total
-    const payment = await Payment.create({
+  // Check if the order already has a payment
+  const existingPayment = await Payment.findOne({
+    where: {
       orderId: order.id,
-      amount: order.total,
-      paymentMethod,
-      status: "pending",
-    });
+    },
+  });
 
-    res.status(201).json({
-      message: "Payment created successfully.",
-      payment,
-    });
-  } catch (error) {
-    console.error("Create payment error:", error);
-
-    res.status(500).json({
-      message: "Failed to create payment.",
-    });
+  if (existingPayment) {
+    throw new AppError(
+      "Payment already exists for this order.",
+      400
+    );
   }
+
+  // Create payment using the order total
+  const payment = await Payment.create({
+    orderId: order.id,
+    amount: order.total,
+    paymentMethod,
+    status: "pending",
+  });
+
+  res.status(201).json({
+    message: "Payment created successfully.",
+    payment,
+  });
 };
 
 
@@ -104,35 +88,25 @@ export const getMyPayments = async (
 ): Promise<void> => {
   const userId = req.user?.id;
 
+  // Check authentication
   if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
-  try {
-    const payments = await Payment.findAll({
-      include: [
-        {
-          model: Order,
-          where: {
-            userId,
-          },
+  const payments = await Payment.findAll({
+    include: [
+      {
+        model: Order,
+        where: {
+          userId,
         },
-      ],
-    });
+      },
+    ],
+  });
 
-    res.status(200).json({
-      payments,
-    });
-  } catch (error) {
-    console.error("Get payments error:", error);
-
-    res.status(500).json({
-      message: "Failed to get payments.",
-    });
-  }
+  res.status(200).json({
+    payments,
+  });
 };
 
 
@@ -143,40 +117,27 @@ export const getMyPaymentById = async (
   const userId = req.user?.id;
   const id = req.params.id as string;
 
+  // Check authentication
   if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
-  try {
-    const payment = await Payment.findByPk(id, {
-      include: [
-        {
-          model: Order,
-          where: {
-            userId,
-          },
+  const payment = await Payment.findByPk(id, {
+    include: [
+      {
+        model: Order,
+        where: {
+          userId,
         },
-      ],
-    });
+      },
+    ],
+  });
 
-    if (!payment) {
-      res.status(404).json({
-        message: "Payment not found.",
-      });
-      return;
-    }
-
-    res.status(200).json({
-      payment,
-    });
-  } catch (error) {
-    console.error("Get payment error:", error);
-
-    res.status(500).json({
-      message: "Failed to get payment.",
-    });
+  if (!payment) {
+    throw new AppError("Payment not found.", 404);
   }
+
+  res.status(200).json({
+    payment,
+  });
 };

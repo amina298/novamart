@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Review from "../models/reviewModel";
 import Product from "../models/productModel";
+import AppError from "../utils/AppError";
 
 export const createReview = async (
   req: Request,
@@ -9,70 +10,56 @@ export const createReview = async (
   const userId = req.user?.id;
 
   if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
   const { productId, rating, comment } = req.body;
 
   if (!productId || !rating || !comment) {
-    res.status(400).json({
-      message: "Product ID, rating, and comment are required.",
-    });
-    return;
+    throw new AppError(
+      "Product ID, rating, and comment are required.",
+      400
+    );
   }
 
   if (rating < 1 || rating > 5) {
-    res.status(400).json({
-      message: "Rating must be between 1 and 5.",
-    });
-    return;
+    throw new AppError(
+      "Rating must be between 1 and 5.",
+      400
+    );
   }
 
-  try {
-    const product = await Product.findByPk(productId);
+  const product = await Product.findByPk(productId);
 
-    if (!product) {
-      res.status(404).json({
-        message: "Product not found.",
-      });
-      return;
-    }
+  if (!product) {
+    throw new AppError("Product not found.", 404);
+  }
 
-    const existingReview = await Review.findOne({
-      where: {
-        userId,
-        productId,
-      },
-    });
-
-    if (existingReview) {
-      res.status(400).json({
-        message: "You have already reviewed this product.",
-      });
-      return;
-    }
-
-    const review = await Review.create({
+  const existingReview = await Review.findOne({
+    where: {
       userId,
       productId,
-      rating,
-      comment,
-    });
+    },
+  });
 
-    res.status(201).json({
-      message: "Review created successfully.",
-      review,
-    });
-  } catch (error) {
-    console.error("Create review error:", error);
-
-    res.status(500).json({
-      message: "Failed to create review.",
-    });
+  if (existingReview) {
+    throw new AppError(
+      "You have already reviewed this product.",
+      400
+    );
   }
+
+  const review = await Review.create({
+    userId,
+    productId,
+    rating,
+    comment,
+  });
+
+  res.status(201).json({
+    message: "Review created successfully.",
+    review,
+  });
 };
 
 
@@ -82,33 +69,23 @@ export const getProductReviews = async (
 ): Promise<void> => {
   const productId = req.params.productId as string;
 
-  try {
-    const product = await Product.findByPk(productId);
+  const product = await Product.findByPk(productId);
 
-    if (!product) {
-      res.status(404).json({
-        message: "Product not found.",
-      });
-      return;
-    }
-
-    const reviews = await Review.findAll({
-      where: {
-        productId,
-      },
-    });
-
-    res.status(200).json({
-      reviews,
-    });
-  } catch (error) {
-    console.error("Get product reviews error:", error);
-
-    res.status(500).json({
-      message: "Failed to get product reviews.",
-    });
+  if (!product) {
+    throw new AppError("Product not found.", 404);
   }
+
+  const reviews = await Review.findAll({
+    where: {
+      productId,
+    },
+  });
+
+  res.status(200).json({
+    reviews,
+  });
 };
+
 
 export const updateReview = async (
   req: Request,
@@ -119,59 +96,45 @@ export const updateReview = async (
   const { rating, comment } = req.body;
 
   if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
   if (!rating || !comment) {
-    res.status(400).json({
-      message: "Rating and comment are required.",
-    });
-    return;
+    throw new AppError(
+      "Rating and comment are required.",
+      400
+    );
   }
 
   if (rating < 1 || rating > 5) {
-    res.status(400).json({
-      message: "Rating must be between 1 and 5.",
-    });
-    return;
+    throw new AppError(
+      "Rating must be between 1 and 5.",
+      400
+    );
   }
 
-  try {
-    const review = await Review.findByPk(reviewId);
+  const review = await Review.findByPk(reviewId);
 
-    if (!review) {
-      res.status(404).json({
-        message: "Review not found.",
-      });
-      return;
-    }
-
-    if (review.userId !== userId) {
-      res.status(403).json({
-        message: "You can only update your own review.",
-      });
-      return;
-    }
-
-    review.rating = rating;
-    review.comment = comment;
-
-    await review.save();
-
-    res.status(200).json({
-      message: "Review updated successfully.",
-      review,
-    });
-  } catch (error) {
-    console.error("Update review error:", error);
-
-    res.status(500).json({
-      message: "Failed to update review.",
-    });
+  if (!review) {
+    throw new AppError("Review not found.", 404);
   }
+
+  if (review.userId !== userId) {
+    throw new AppError(
+      "You can only update your own review.",
+      403
+    );
+  }
+
+  review.rating = rating;
+  review.comment = comment;
+
+  await review.save();
+
+  res.status(200).json({
+    message: "Review updated successfully.",
+    review,
+  });
 };
 
 
@@ -183,39 +146,25 @@ export const deleteReview = async (
   const reviewId = req.params.id as string;
 
   if (!userId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
-  try {
-    const review = await Review.findByPk(reviewId);
+  const review = await Review.findByPk(reviewId);
 
-    if (!review) {
-      res.status(404).json({
-        message: "Review not found.",
-      });
-      return;
-    }
-
-    if (review.userId !== userId) {
-      res.status(403).json({
-        message: "You can only delete your own review.",
-      });
-      return;
-    }
-
-    await review.destroy();
-
-    res.status(200).json({
-      message: "Review deleted successfully.",
-    });
-  } catch (error) {
-    console.error("Delete review error:", error);
-
-    res.status(500).json({
-      message: "Failed to delete review.",
-    });
+  if (!review) {
+    throw new AppError("Review not found.", 404);
   }
+
+  if (review.userId !== userId) {
+    throw new AppError(
+      "You can only delete your own review.",
+      403
+    );
+  }
+
+  await review.destroy();
+
+  res.status(200).json({
+    message: "Review deleted successfully.",
+  });
 };

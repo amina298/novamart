@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth";
+
 import {
   createReview,
   getProductReviews,
@@ -49,14 +50,13 @@ const router = Router();
  *         description: Unauthorized
  *       404:
  *         description: Product not found
- *       500:
- *         description: Failed to create review
  */
 router.post(
   "/",
   authenticate,
   createReview
 );
+
 
 /**
  * @swagger
@@ -77,13 +77,12 @@ router.post(
  *         description: Product reviews retrieved successfully
  *       404:
  *         description: Product not found
- *       500:
- *         description: Failed to get product reviews
  */
 router.get(
   "/product/:productId",
   getProductReviews
 );
+
 
 /**
  * @swagger
@@ -130,11 +129,13 @@ router.get(
  *         description: You can only update your own review
  *       404:
  *         description: Review not found
- *       500:
- *         description: Failed to update review
  */
 router.put(
-  "/:id", authenticate, updateReview);
+  "/:id",
+  authenticate,
+  updateReview
+);
+
 
 /**
  * @swagger
@@ -161,9 +162,11 @@ router.put(
  *         description: You can only delete your own review
  *       404:
  *         description: Review not found
- *       500:
- *         description: Failed to delete review
  */
-router.delete("/:id", authenticate, deleteReview);
+router.delete(
+  "/:id",
+  authenticate,
+  deleteReview
+);
 
 export default router;

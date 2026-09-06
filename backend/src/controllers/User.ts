@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import User from "../models/User";
+import AppError from "../utils/AppError";
 
 export const registerUser = async (
   req: Request,
@@ -11,22 +12,16 @@ export const registerUser = async (
 
   // Validate the request
   if (!firstName || !lastName || !email || !password || !phone) {
-    res.status(400).json({
-      message: "All fields are required.",
-    });
-    return;
+    throw new AppError("All fields are required.", 400);
   }
-  
+
   // Check if email already exists
   const existingUser = await User.findOne({
     where: { email },
   });
 
   if (existingUser) {
-    res.status(409).json({
-      message: "Email already exists.",
-    });
-    return;
+    throw new AppError("Email already exists.", 409);
   }
 
   // Hash the password
@@ -56,6 +51,7 @@ export const registerUser = async (
   });
 };
 
+
 export const getProfile = (
   req: Request,
   res: Response
@@ -65,27 +61,23 @@ export const getProfile = (
   });
 };
 
+
 export const updateProfile = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const { firstName, lastName, phone } = req.body;
-  
+
   if (!firstName || !lastName || !phone) {
-    res.status(400).json({
-      message: "All fields are required.",
-    });
-
-    return;
+    throw new AppError("All fields are required.", 400);
   }
- const user = await User.findByPk(req.user!.id);
+
+  const user = await User.findByPk(req.user!.id);
+
   if (!user) {
-    res.status(404).json({
-      message: "User not found.",
-    });
-
-    return;
+    throw new AppError("User not found.", 404);
   }
+
   user.firstName = firstName;
   user.lastName = lastName;
   user.phone = phone;
@@ -103,28 +95,25 @@ export const updateProfile = async (
       role: user.role,
       isVerified: user.isVerified,
     },
-
   });
-}
+};
+
 
 export const deleteProfile = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const userId = req.user!.id;
-  const user = await User.findByPk(userId);
-  
-    if (!user) {
-    res.status(404).json({
-      message: "User not found.",
-    });
 
-    return;
-    }
-  
+  const user = await User.findByPk(userId);
+
+  if (!user) {
+    throw new AppError("User not found.", 404);
+  }
+
   await user.destroy();
-  
-    res.status(200).json({
+
+  res.status(200).json({
     message: "Profile deleted successfully.",
   });
 };

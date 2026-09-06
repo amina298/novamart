@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import User from "../models/User";
 import jwt from "jsonwebtoken";
+import AppError from "../utils/AppError";
 
 export const loginUser = async (
   req: Request,
@@ -10,10 +11,10 @@ export const loginUser = async (
   const { email, password } = req.body;
 
   if (!email || !password) {
-    res.status(400).json({
-      message: "Email and password are required.",
-    });
-    return;
+    throw new AppError(
+      "Email and password are required.",
+      400
+    );
   }
 
   const user = await User.findOne({
@@ -23,10 +24,10 @@ export const loginUser = async (
   });
 
   if (!user) {
-    res.status(401).json({
-      message: "Invalid email or password.",
-    });
-    return;
+    throw new AppError(
+      "Invalid email or password.",
+      401
+    );
   }
 
   const isPasswordValid = await bcrypt.compare(
@@ -35,13 +36,11 @@ export const loginUser = async (
   );
 
   if (!isPasswordValid) {
-    res.status(401).json({
-      message: "Invalid email or password.",
-    });
-    return;
+    throw new AppError(
+      "Invalid email or password.",
+      401
+    );
   }
-
-
 
   const token = jwt.sign(
     {

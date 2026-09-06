@@ -1,28 +1,21 @@
 import { Request, Response } from "express";
 import User from "../../models/User";
 import Order from "../../models/orderModel";
+import AppError from "../../utils/AppError";
 
 export const getAllUsers = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const users = await User.findAll({
-      attributes: {
-        exclude: ["password"],
-      },
-    });
+  const users = await User.findAll({
+    attributes: {
+      exclude: ["password"],
+    },
+  });
 
-    res.status(200).json({
-      users,
-    });
-  } catch (error) {
-    console.error("Get all users error:", error);
-
-    res.status(500).json({
-      message: "Failed to get all users.",
-    });
-  }
+  res.status(200).json({
+    users,
+  });
 };
 
 
@@ -32,31 +25,19 @@ export const getUserById = async (
 ): Promise<void> => {
   const id = req.params.id as string;
 
-  try {
-    const user = await User.findByPk(id, {
-      attributes: {
-        exclude: ["password"],
-      },
-    });
+  const user = await User.findByPk(id, {
+    attributes: {
+      exclude: ["password"],
+    },
+  });
 
-    if (!user) {
-      res.status(404).json({
-        message: "User not found.",
-      });
-
-      return;
-    }
-
-    res.status(200).json({
-      user,
-    });
-  } catch (error) {
-    console.error("Get user by ID error:", error);
-
-    res.status(500).json({
-      message: "Failed to get user.",
-    });
+  if (!user) {
+    throw new AppError("User not found.", 404);
   }
+
+  res.status(200).json({
+    user,
+  });
 };
 
 
@@ -74,65 +55,45 @@ export const updateUser = async (
     role,
   } = req.body;
 
-  // 1. Validate required fields
+  // Validate required fields
   if (!firstName || !lastName || !email || !phone || !role) {
-    res.status(400).json({
-      message: "All fields are required.",
-    });
-
-    return;
+    throw new AppError("All fields are required.", 400);
   }
 
-  // 2. Validate role
+  // Validate role
   const allowedRoles = ["customer", "admin"];
 
   if (!allowedRoles.includes(role)) {
-    res.status(400).json({
-      message: "Invalid user role.",
-    });
-
-    return;
+    throw new AppError("Invalid user role.", 400);
   }
 
-  try {
-    // 3. Find the user
-    const user = await User.findByPk(id);
+  // Find the user
+  const user = await User.findByPk(id);
 
-    if (!user) {
-      res.status(404).json({
-        message: "User not found.",
-      });
-
-      return;
-    }
-
-    // 4. Update user
-    user.firstName = firstName;
-    user.lastName = lastName;
-    user.email = email;
-    user.phone = phone;
-    user.role = role;
-
-    await user.save();
-
-    // 5. Return user without password
-    const updatedUser = await User.findByPk(id, {
-      attributes: {
-        exclude: ["password"],
-      },
-    });
-
-    res.status(200).json({
-      message: "User updated successfully.",
-      user: updatedUser,
-    });
-  } catch (error) {
-    console.error("Update user error:", error);
-
-    res.status(500).json({
-      message: "Failed to update user.",
-    });
+  if (!user) {
+    throw new AppError("User not found.", 404);
   }
+
+  // Update user
+  user.firstName = firstName;
+  user.lastName = lastName;
+  user.email = email;
+  user.phone = phone;
+  user.role = role;
+
+  await user.save();
+
+  // Return user without password
+  const updatedUser = await User.findByPk(id, {
+    attributes: {
+      exclude: ["password"],
+    },
+  });
+
+  res.status(200).json({
+    message: "User updated successfully.",
+    user: updatedUser,
+  });
 };
 
 
@@ -144,60 +105,42 @@ export const deleteUser = async (
   const adminId = req.user?.id;
 
   if (!adminId) {
-    res.status(401).json({
-      message: "Unauthorized.",
-    });
-
-    return;
+    throw new AppError("Unauthorized.", 401);
   }
 
-  try {
-    // 1. Find the user
-    const user = await User.findByPk(id);
+  // Find the user
+  const user = await User.findByPk(id);
 
-    if (!user) {
-      res.status(404).json({
-        message: "User not found.",
-      });
-
-      return;
-    }
-
-    // 2. Prevent admin from deleting their own account
-    if (Number(id) === adminId) {
-      res.status(400).json({
-        message: "You cannot delete your own admin account.",
-      });
-
-      return;
-    }
-
-    // 3. Check whether the user has existing orders
-    const order = await Order.findOne({
-      where: {
-        userId: id,
-      },
-    });
-
-    if (order) {
-      res.status(400).json({
-        message: "Cannot delete a user who has existing orders.",
-      });
-
-      return;
-    }
-
-    // 4. Delete the user
-    await user.destroy();
-
-    res.status(200).json({
-      message: "User deleted successfully.",
-    });
-  } catch (error) {
-    console.error("Delete user error:", error);
-
-    res.status(500).json({
-      message: "Failed to delete user.",
-    });
+  if (!user) {
+    throw new AppError("User not found.", 404);
   }
+
+  // Prevent admin from deleting their own account
+  if (Number(id) === adminId) {
+    throw new AppError(
+      "You cannot delete your own admin account.",
+      400
+    );
+  }
+
+  // Check whether the user has existing orders
+  const order = await Order.findOne({
+    where: {
+      userId: id,
+    },
+  });
+
+  if (order) {
+    throw new AppError(
+      "Cannot delete a user who has existing orders.",
+      400
+    );
+  }
+
+  // Delete the user
+  await user.destroy();
+
+  res.status(200).json({
+    message: "User deleted successfully.",
+  });
 };

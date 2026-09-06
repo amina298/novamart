@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Cart from "../models/cartModel";
 import Product from "../models/productModel";
 import CartItem from "../models/cartItemModel";
+import AppError from "../utils/AppError";
 
 export const getCart = async (
   req: Request,
@@ -9,16 +10,16 @@ export const getCart = async (
 ): Promise<void> => {
   const userId = req.user?.id;
 
+  if (!userId) {
+    throw new AppError("Unauthorized.", 401);
+  }
+
   const cart = await Cart.findOne({
     where: { userId },
   });
 
   if (!cart) {
-    res.status(404).json({
-      message: "Cart not found.",
-    });
-
-    return;
+    throw new AppError("Cart not found.", 404);
   }
 
   res.status(200).json({
@@ -27,21 +28,22 @@ export const getCart = async (
 };
 
 
-
 export const addToCart = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const userId = req.user?.id;
-
   const { productId, quantity } = req.body;
 
-  if (!productId || !quantity) {
-    res.status(400).json({
-      message: "Product ID and quantity are required.",
-    });
+  if (!userId) {
+    throw new AppError("Unauthorized.", 401);
+  }
 
-    return;
+  if (!productId || !quantity) {
+    throw new AppError(
+      "Product ID and quantity are required.",
+      400
+    );
   }
 
   const cart = await Cart.findOne({
@@ -49,20 +51,13 @@ export const addToCart = async (
   });
 
   if (!cart) {
-    res.status(404).json({
-      message: "Cart not found.",
-    });
-
-    return;
+    throw new AppError("Cart not found.", 404);
   }
 
   const product = await Product.findByPk(productId);
-  if (!product) {
-    res.status(404).json({
-      message: "Product not found.",
-    });
 
-    return;
+  if (!product) {
+    throw new AppError("Product not found.", 404);
   }
 
   const existingItem = await CartItem.findOne({
@@ -73,43 +68,39 @@ export const addToCart = async (
   });
 
   if (existingItem) {
-  const newQuantity = existingItem.quantity + quantity;
+    const newQuantity = existingItem.quantity + quantity;
 
-  if (newQuantity > product.stock) {
-    res.status(400).json({
-      message: `Not enough stock for ${product.name}.`,
+    if (newQuantity > product.stock) {
+      throw new AppError(
+        `Not enough stock for ${product.name}.`,
+        400
+      );
+    }
+
+    existingItem.quantity = newQuantity;
+
+    await existingItem.save();
+
+    res.status(200).json({
+      message: "Cart updated successfully.",
+      cartItem: existingItem,
     });
 
     return;
   }
 
-  existingItem.quantity = newQuantity;
-
-  await existingItem.save();
-
-  res.status(200).json({
-    message: "Cart updated successfully.",
-    cartItem: existingItem,
-  });
-
-  return;
+  if (quantity > product.stock) {
+    throw new AppError(
+      `Not enough stock for ${product.name}.`,
+      400
+    );
   }
-  
 
- if (quantity > product.stock) {
-  res.status(400).json({
-    message: `Not enough stock for ${product.name}.`,
+  const cartItem = await CartItem.create({
+    cartId: cart.id,
+    productId,
+    quantity,
   });
-
-  return;
-}
-
-const cartItem = await CartItem.create({
-  cartId: cart.id,
-  productId,
-  quantity,
-});
-  
 
   res.status(201).json({
     message: "Product added to cart successfully.",
@@ -118,71 +109,57 @@ const cartItem = await CartItem.create({
 };
 
 
-
 export const updateCartItem = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const id = Number(req.params.id);
-
   const { quantity } = req.body;
+  const userId = req.user?.id;
 
-  if (!quantity || quantity < 1) {
-    res.status(400).json({
-      message: "Quantity must be at least 1.",
-    });
-
-    return;
+  if (!userId) {
+    throw new AppError("Unauthorized.", 401);
   }
 
- const cartItem = await CartItem.findByPk(id);
+  if (!quantity || quantity < 1) {
+    throw new AppError(
+      "Quantity must be at least 1.",
+      400
+    );
+  }
 
-if (!cartItem) {
-  res.status(404).json({
-    message: "Cart item not found.",
-  });
+  const cartItem = await CartItem.findByPk(id);
 
-  return;
-}
+  if (!cartItem) {
+    throw new AppError("Cart item not found.", 404);
+  }
 
-const product = await Product.findByPk(cartItem.productId);
+  const product = await Product.findByPk(cartItem.productId);
 
-if (!product) {
-  res.status(404).json({
-    message: "Product not found.",
-  });
+  if (!product) {
+    throw new AppError("Product not found.", 404);
+  }
 
-  return;
-}
-
-if (product.stock < quantity) {
-  res.status(400).json({
-    message: `Not enough stock for ${product.name}.`,
-  });
-
-  return;
-}
-
-  const userId = req.user?.id;
+  if (product.stock < quantity) {
+    throw new AppError(
+      `Not enough stock for ${product.name}.`,
+      400
+    );
+  }
 
   const cart = await Cart.findOne({
     where: { userId },
   });
 
   if (!cart) {
-    res.status(404).json({
-      message: "Cart not found.",
-    });
-
-    return;
+    throw new AppError("Cart not found.", 404);
   }
 
   if (cartItem.cartId !== cart.id) {
-    res.status(403).json({
-      message: "You cannot update this cart item.",
-    });
-
-    return;
+    throw new AppError(
+      "You cannot update this cart item.",
+      403
+    );
   }
 
   cartItem.quantity = quantity;
@@ -196,44 +173,36 @@ if (product.stock < quantity) {
 };
 
 
-
-
 export const removeCartItem = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const id = Number(req.params.id);
+  const userId = req.user?.id;
+
+  if (!userId) {
+    throw new AppError("Unauthorized.", 401);
+  }
 
   const cartItem = await CartItem.findByPk(id);
 
   if (!cartItem) {
-    res.status(404).json({
-      message: "Cart item not found.",
-    });
-
-    return;
+    throw new AppError("Cart item not found.", 404);
   }
-
-  const userId = req.user?.id;
 
   const cart = await Cart.findOne({
     where: { userId },
   });
 
   if (!cart) {
-    res.status(404).json({
-      message: "Cart not found.",
-    });
-
-    return;
+    throw new AppError("Cart not found.", 404);
   }
 
   if (cartItem.cartId !== cart.id) {
-    res.status(403).json({
-      message: "You cannot remove this cart item.",
-    });
-
-    return;
+    throw new AppError(
+      "You cannot remove this cart item.",
+      403
+    );
   }
 
   await cartItem.destroy();
@@ -244,25 +213,22 @@ export const removeCartItem = async (
 };
 
 
-
-
-
 export const clearCart = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const userId = req.user?.id;
 
+  if (!userId) {
+    throw new AppError("Unauthorized.", 401);
+  }
+
   const cart = await Cart.findOne({
     where: { userId },
   });
 
   if (!cart) {
-    res.status(404).json({
-      message: "Cart not found.",
-    });
-
-    return;
+    throw new AppError("Cart not found.", 404);
   }
 
   await CartItem.destroy({

@@ -1,6 +1,12 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth";
-import { getCart, addToCart, updateCartItem, removeCartItem, clearCart  } from "../controllers/cartController";
+import {
+  getCart,
+  addToCart,
+  updateCartItem,
+  removeCartItem,
+  clearCart,
+} from "../controllers/cartController";
 
 const router = Router();
 
@@ -20,8 +26,6 @@ const router = Router();
  *         description: Unauthorized
  *       404:
  *         description: Cart not found
- *       500:
- *         description: Failed to get cart
  */
 router.get(
   "/",
@@ -63,9 +67,7 @@ router.get(
  *       401:
  *         description: Unauthorized
  *       404:
- *         description: Product not found
- *       500:
- *         description: Failed to add product to cart
+ *         description: Product or cart not found
  */
 router.post(
   "/items",
@@ -106,13 +108,13 @@ router.post(
  *       200:
  *         description: Cart item updated successfully
  *       400:
- *         description: Invalid quantity
+ *         description: Invalid quantity or insufficient stock
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: You cannot update this cart item
  *       404:
- *         description: Cart item not found
- *       500:
- *         description: Failed to update cart item
+ *         description: Cart, cart item, or product not found
  */
 router.put(
   "/items/:id",
@@ -142,10 +144,10 @@ router.put(
  *         description: Cart item removed successfully
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: You cannot remove this cart item
  *       404:
- *         description: Cart item not found
- *       500:
- *         description: Failed to remove cart item
+ *         description: Cart or cart item not found
  */
 router.delete(
   "/items/:id",
@@ -170,12 +172,11 @@ router.delete(
  *         description: Unauthorized
  *       404:
  *         description: Cart not found
- *       500:
- *         description: Failed to clear cart
  */
 router.delete(
   "/",
   authenticate,
   clearCart
 );
+
 export default router;

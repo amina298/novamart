@@ -1,5 +1,12 @@
 import { Router } from "express";
-import { registerUser, getProfile, updateProfile, deleteProfile } from "../controllers/User";
+
+import {
+  registerUser,
+  getProfile,
+  updateProfile,
+  deleteProfile,
+} from "../controllers/User";
+
 import { authenticate } from "../middleware/auth";
 
 const router = Router();
@@ -22,6 +29,7 @@ const router = Router();
  *               - lastName
  *               - email
  *               - password
+ *               - phone
  *             properties:
  *               firstName:
  *                 type: string
@@ -37,15 +45,20 @@ const router = Router();
  *                 type: string
  *                 format: password
  *                 example: Password123
+ *               phone:
+ *                 type: string
+ *                 example: "+254724440076"
  *     responses:
  *       201:
  *         description: User registered successfully
  *       400:
- *         description: Invalid registration data or email already exists
- *       500:
- *         description: Failed to register user
+ *         description: All fields are required
+ *       409:
+ *         description: Email already exists
  */
 router.post("/register", registerUser);
+
+
 /**
  * @swagger
  * /api/users/profile:
@@ -60,12 +73,14 @@ router.post("/register", registerUser);
  *         description: User profile retrieved successfully
  *       401:
  *         description: Unauthorized
- *       404:
- *         description: User not found
- *       500:
- *         description: Failed to get user profile
  */
-router.get("/profile", authenticate, getProfile);
+router.get(
+  "/profile",
+  authenticate,
+  getProfile
+);
+
+
 /**
  * @swagger
  * /api/users/profile:
@@ -81,6 +96,10 @@ router.get("/profile", authenticate, getProfile);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - firstName
+ *               - lastName
+ *               - phone
  *             properties:
  *               firstName:
  *                 type: string
@@ -88,27 +107,26 @@ router.get("/profile", authenticate, getProfile);
  *               lastName:
  *                 type: string
  *                 example: Jama
- *               email:
+ *               phone:
  *                 type: string
- *                 format: email
- *                 example: amina@example.com
- *               password:
- *                 type: string
- *                 format: password
- *                 example: NewPassword123
+ *                 example: "+254724440076"
  *     responses:
  *       200:
  *         description: Profile updated successfully
  *       400:
- *         description: Invalid profile data
+ *         description: All fields are required
  *       401:
  *         description: Unauthorized
  *       404:
  *         description: User not found
- *       500:
- *         description: Failed to update profile
  */
-router.put("/profile", authenticate, updateProfile);
+router.put(
+  "/profile",
+  authenticate,
+  updateProfile
+);
+
+
 /**
  * @swagger
  * /api/users/profile:
@@ -125,8 +143,11 @@ router.put("/profile", authenticate, updateProfile);
  *         description: Unauthorized
  *       404:
  *         description: User not found
- *       500:
- *         description: Failed to delete profile
  */
-router.delete("/profile", authenticate, deleteProfile);
+router.delete(
+  "/profile",
+  authenticate,
+  deleteProfile
+);
+
 export default router;

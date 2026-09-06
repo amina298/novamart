@@ -1,30 +1,23 @@
 import { Request, Response } from "express";
 import Payment from "../../models/paymentModel";
 import Order from "../../models/orderModel";
+import AppError from "../../utils/AppError";
 
 export const getAllPayments = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const payments = await Payment.findAll({
-      include: [
-        {
-          model: Order,
-        },
-      ],
-    });
+  const payments = await Payment.findAll({
+    include: [
+      {
+        model: Order,
+      },
+    ],
+  });
 
-    res.status(200).json({
-      payments,
-    });
-  } catch (error) {
-    console.error("Get all payments error:", error);
-
-    res.status(500).json({
-      message: "Failed to get payments.",
-    });
-  }
+  res.status(200).json({
+    payments,
+  });
 };
 
 
@@ -34,32 +27,21 @@ export const getPaymentById = async (
 ): Promise<void> => {
   const id = req.params.id as string;
 
-  try {
-    const payment = await Payment.findByPk(id, {
-      include: [
-        {
-          model: Order,
-        },
-      ],
-    });
+  const payment = await Payment.findByPk(id, {
+    include: [
+      {
+        model: Order,
+      },
+    ],
+  });
 
-    if (!payment) {
-      res.status(404).json({
-        message: "Payment not found.",
-      });
-      return;
-    }
-
-    res.status(200).json({
-      payment,
-    });
-  } catch (error) {
-    console.error("Get payment error:", error);
-
-    res.status(500).json({
-      message: "Failed to get payment.",
-    });
+  if (!payment) {
+    throw new AppError("Payment not found.", 404);
   }
+
+  res.status(200).json({
+    payment,
+  });
 };
 
 
@@ -70,59 +52,46 @@ export const updatePaymentStatus = async (
   const id = req.params.id as string;
   const { status } = req.body;
 
+  // Validate required field
   if (!status) {
-    res.status(400).json({
-      message: "Payment status is required.",
-    });
-    return;
+    throw new AppError("Payment status is required.", 400);
   }
 
+  // Validate payment status
   const allowedStatuses = ["pending", "paid", "failed"];
 
   if (!allowedStatuses.includes(status)) {
-    res.status(400).json({
-      message: "Invalid payment status.",
-    });
-    return;
+    throw new AppError("Invalid payment status.", 400);
   }
 
-  try {
-    const payment = await Payment.findByPk(id);
+  const payment = await Payment.findByPk(id);
 
-    if (!payment) {
-      res.status(404).json({
-        message: "Payment not found.",
-      });
-      return;
-    }
-
-    if (payment.status === "paid") {
-      res.status(400).json({
-        message: "Paid payments cannot be changed.",
-      });
-      return;
-    }
-
-    if (payment.status === "failed" && status !== "paid") {
-      res.status(400).json({
-        message: "Failed payments can only be marked as paid.",
-      });
-      return;
-    }
-
-    payment.status = status;
-
-    await payment.save();
-
-    res.status(200).json({
-      message: "Payment status updated successfully.",
-      payment,
-    });
-  } catch (error) {
-    console.error("Update payment status error:", error);
-
-    res.status(500).json({
-      message: "Failed to update payment status.",
-    });
+  if (!payment) {
+    throw new AppError("Payment not found.", 404);
   }
+
+  // Paid payments cannot be changed
+  if (payment.status === "paid") {
+    throw new AppError(
+      "Paid payments cannot be changed.",
+      400
+    );
+  }
+
+  // Failed payments can only be marked as paid
+  if (payment.status === "failed" && status !== "paid") {
+    throw new AppError(
+      "Failed payments can only be marked as paid.",
+      400
+    );
+  }
+
+  payment.status = status;
+
+  await payment.save();
+
+  res.status(200).json({
+    message: "Payment status updated successfully.",
+    payment,
+  });
 };

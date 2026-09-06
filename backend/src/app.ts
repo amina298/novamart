@@ -16,6 +16,7 @@ import paymentRoutes from "./routes/paymentRoute";
 import adminPaymentRoutes from "./admin/routes/adminPaymentRoute";
 import reviewRoutes from "./routes/reviewRoute";
 import wishlistRoutes from "./routes/wishlistRoute";
+import errorHandler from "./middleware/errorHandler";
 
 
 const app = express();
@@ -46,5 +47,8 @@ app.get("/", (req: Request, res: Response) => {
     message: "Novamart API is running 🚀",
   });
 });
+
+
+app.use(errorHandler);
 
 export default app;

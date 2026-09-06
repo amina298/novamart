@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth";
+
 import {
   addToWishlist,
   getMyWishlist,
@@ -33,19 +34,18 @@ const router = Router();
  *       201:
  *         description: Product added to wishlist
  *       400:
- *         description: Product is already in wishlist or product ID is missing
+ *         description: Product ID is missing or product is already in wishlist
  *       401:
  *         description: Unauthorized
  *       404:
  *         description: Product not found
- *       500:
- *         description: Failed to add product to wishlist
  */
 router.post(
   "/",
   authenticate,
   addToWishlist
 );
+
 
 /**
  * @swagger
@@ -61,14 +61,13 @@ router.post(
  *         description: Wishlist retrieved successfully
  *       401:
  *         description: Unauthorized
- *       500:
- *         description: Failed to get wishlist
  */
 router.get(
   "/",
   authenticate,
   getMyWishlist
 );
+
 
 /**
  * @swagger
@@ -83,6 +82,7 @@ router.get(
  *       - in: path
  *         name: id
  *         required: true
+ *         description: Wishlist item ID
  *         schema:
  *           type: integer
  *         example: 1
@@ -95,8 +95,6 @@ router.get(
  *         description: You can only remove items from your own wishlist
  *       404:
  *         description: Wishlist item not found
- *       500:
- *         description: Failed to remove product from wishlist
  */
 router.delete(
   "/:id",

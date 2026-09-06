@@ -35,8 +35,6 @@ const router = Router();
  *         description: Email and password are required
  *       401:
  *         description: Invalid email or password
- *       500:
- *         description: Failed to login
  */
 router.post("/login", loginUser);
 
