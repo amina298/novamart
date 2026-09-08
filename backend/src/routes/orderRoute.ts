@@ -5,7 +5,6 @@ import {
   createOrder,
   getOrders,
   getOrderById,
-  deleteOrder,
   cancelOrder,
 } from "../controllers/orderController";
 
@@ -15,7 +14,7 @@ const router = Router();
  * @swagger
  * /api/orders:
  *   post:
- *     summary: Create a new order
+ *     summary: Create a new order from the user's cart
  *     tags:
  *       - Orders
  *     security:
@@ -30,8 +29,11 @@ const router = Router();
  *       404:
  *         description: Cart or product not found
  */
-router.post("/", authenticate, createOrder);
-
+router.post(
+  "/",
+  authenticate,
+  createOrder
+);
 
 /**
  * @swagger
@@ -48,8 +50,11 @@ router.post("/", authenticate, createOrder);
  *       401:
  *         description: Unauthorized
  */
-router.get("/", authenticate, getOrders);
-
+router.get(
+  "/",
+  authenticate,
+  getOrders
+);
 
 /**
  * @swagger
@@ -75,41 +80,17 @@ router.get("/", authenticate, getOrders);
  *       404:
  *         description: Order not found
  */
-router.get("/:id", authenticate, getOrderById);
-
-
-/**
- * @swagger
- * /api/orders/{id}:
- *   delete:
- *     summary: Delete an order
- *     tags:
- *       - Orders
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         example: 7
- *     responses:
- *       200:
- *         description: Order deleted successfully
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Order not found
- */
-router.delete("/:id", authenticate, deleteOrder);
-
+router.get(
+  "/:id",
+  authenticate,
+  getOrderById
+);
 
 /**
  * @swagger
  * /api/orders/{id}/cancel:
  *   patch:
- *     summary: Cancel an order
+ *     summary: Cancel a pending order
  *     tags:
  *       - Orders
  *     security:
@@ -125,12 +106,16 @@ router.delete("/:id", authenticate, deleteOrder);
  *       200:
  *         description: Order cancelled successfully
  *       400:
- *         description: Order cannot be cancelled
+ *         description: Only pending orders can be cancelled
  *       401:
  *         description: Unauthorized
  *       404:
  *         description: Order not found
  */
-router.patch("/:id/cancel", authenticate, cancelOrder);
+router.patch(
+  "/:id/cancel",
+  authenticate,
+  cancelOrder
+);
 
 export default router;

@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { loginUser } from "../controllers/Login";
+import validate from "../middleware/validate";
+import { loginSchema } from "../validation/authValidation";
 
 const router = Router();
 
@@ -36,6 +38,10 @@ const router = Router();
  *       401:
  *         description: Invalid email or password
  */
-router.post("/login", loginUser);
+router.post(
+  "/login",
+  validate(loginSchema),
+  loginUser
+);
 
 export default router;

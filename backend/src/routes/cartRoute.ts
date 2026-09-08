@@ -7,6 +7,11 @@ import {
   removeCartItem,
   clearCart,
 } from "../controllers/cartController";
+import validate from "../middleware/validate";
+import {
+  addToCartSchema,
+  updateCartItemSchema,
+} from "../validation/cartValidation";
 
 const router = Router();
 
@@ -72,6 +77,7 @@ router.get(
 router.post(
   "/items",
   authenticate,
+  validate(addToCartSchema),
   addToCart
 );
 
@@ -119,6 +125,7 @@ router.post(
 router.put(
   "/items/:id",
   authenticate,
+  validate(updateCartItemSchema),
   updateCartItem
 );
 

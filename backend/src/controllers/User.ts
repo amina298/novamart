@@ -7,13 +7,8 @@ export const registerUser = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  // Read the request
+  // Read validated request data
   const { firstName, lastName, email, password, phone } = req.body;
-
-  // Validate the request
-  if (!firstName || !lastName || !email || !password || !phone) {
-    throw new AppError("All fields are required.", 400);
-  }
 
   // Check if email already exists
   const existingUser = await User.findOne({
@@ -61,16 +56,11 @@ export const getProfile = (
   });
 };
 
-
 export const updateProfile = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const { firstName, lastName, phone } = req.body;
-
-  if (!firstName || !lastName || !phone) {
-    throw new AppError("All fields are required.", 400);
-  }
 
   const user = await User.findByPk(req.user!.id);
 
@@ -97,6 +87,7 @@ export const updateProfile = async (
     },
   });
 };
+
 
 
 export const deleteProfile = async (

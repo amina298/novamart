@@ -27,7 +27,6 @@ export const getCart = async (
   });
 };
 
-
 export const addToCart = async (
   req: Request,
   res: Response
@@ -37,13 +36,6 @@ export const addToCart = async (
 
   if (!userId) {
     throw new AppError("Unauthorized.", 401);
-  }
-
-  if (!productId || !quantity) {
-    throw new AppError(
-      "Product ID and quantity are required.",
-      400
-    );
   }
 
   const cart = await Cart.findOne({
@@ -108,7 +100,6 @@ export const addToCart = async (
   });
 };
 
-
 export const updateCartItem = async (
   req: Request,
   res: Response
@@ -119,13 +110,6 @@ export const updateCartItem = async (
 
   if (!userId) {
     throw new AppError("Unauthorized.", 401);
-  }
-
-  if (!quantity || quantity < 1) {
-    throw new AppError(
-      "Quantity must be at least 1.",
-      400
-    );
   }
 
   const cartItem = await CartItem.findByPk(id);
@@ -172,7 +156,6 @@ export const updateCartItem = async (
   });
 };
 
-
 export const removeCartItem = async (
   req: Request,
   res: Response
@@ -211,7 +194,6 @@ export const removeCartItem = async (
     message: "Cart item removed successfully.",
   });
 };
-
 
 export const clearCart = async (
   req: Request,

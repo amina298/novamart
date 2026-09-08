@@ -8,6 +8,8 @@ import {
 } from "../controllers/User";
 
 import { authenticate } from "../middleware/auth";
+import validate from "../middleware/validate";
+import { registerUserSchema, updateProfileSchema } from "../validation/userValidation";
 
 const router = Router();
 
@@ -56,7 +58,7 @@ const router = Router();
  *       409:
  *         description: Email already exists
  */
-router.post("/register", registerUser);
+router.post("/register",  validate(registerUserSchema), registerUser);
 
 
 /**
@@ -123,6 +125,7 @@ router.get(
 router.put(
   "/profile",
   authenticate,
+   validate(updateProfileSchema),
   updateProfile
 );
 

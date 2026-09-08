@@ -2,6 +2,9 @@ import { Router } from "express";
 
 import { authenticate } from "../../middleware/auth";
 import { requireAdmin } from "../../middleware/authorization";
+import validate from "../../middleware/validate";
+
+import { updateOrderStatusSchema } from "../../validation/adminOrderValidation";
 
 import {
   getAllOrders,
@@ -36,7 +39,6 @@ router.get(
   getAllOrders
 );
 
-
 /**
  * @swagger
  * /api/admin/orders/{id}:
@@ -70,7 +72,6 @@ router.get(
   requireAdmin,
   getOrderById
 );
-
 
 /**
  * @swagger
@@ -122,9 +123,9 @@ router.put(
   "/:id/status",
   authenticate,
   requireAdmin,
+  validate(updateOrderStatusSchema),
   updateOrderStatus
 );
-
 
 /**
  * @swagger

@@ -2,6 +2,9 @@ import { Router } from "express";
 
 import { authenticate } from "../../middleware/auth";
 import { requireAdmin } from "../../middleware/authorization";
+import validate from "../../middleware/validate";
+
+import { updateUserSchema } from "../../validation/adminUserValidation";
 
 import {
   getAllUsers,
@@ -36,7 +39,6 @@ router.get(
   getAllUsers
 );
 
-
 /**
  * @swagger
  * /api/admin/users/{id}:
@@ -70,7 +72,6 @@ router.get(
   requireAdmin,
   getUserById
 );
-
 
 /**
  * @swagger
@@ -125,7 +126,7 @@ router.get(
  *       200:
  *         description: User updated successfully
  *       400:
- *         description: Invalid user data or role
+ *         description: Invalid user data
  *       401:
  *         description: Unauthorized
  *       403:
@@ -137,9 +138,9 @@ router.put(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(updateUserSchema),
   updateUser
 );
-
 
 /**
  * @swagger

@@ -18,7 +18,6 @@ export const getAllUsers = async (
   });
 };
 
-
 export const getUserById = async (
   req: Request,
   res: Response
@@ -40,7 +39,6 @@ export const getUserById = async (
   });
 };
 
-
 export const updateUser = async (
   req: Request,
   res: Response
@@ -55,26 +53,12 @@ export const updateUser = async (
     role,
   } = req.body;
 
-  // Validate required fields
-  if (!firstName || !lastName || !email || !phone || !role) {
-    throw new AppError("All fields are required.", 400);
-  }
-
-  // Validate role
-  const allowedRoles = ["customer", "admin"];
-
-  if (!allowedRoles.includes(role)) {
-    throw new AppError("Invalid user role.", 400);
-  }
-
-  // Find the user
   const user = await User.findByPk(id);
 
   if (!user) {
     throw new AppError("User not found.", 404);
   }
 
-  // Update user
   user.firstName = firstName;
   user.lastName = lastName;
   user.email = email;
@@ -83,7 +67,6 @@ export const updateUser = async (
 
   await user.save();
 
-  // Return user without password
   const updatedUser = await User.findByPk(id, {
     attributes: {
       exclude: ["password"],
@@ -96,7 +79,6 @@ export const updateUser = async (
   });
 };
 
-
 export const deleteUser = async (
   req: Request,
   res: Response
@@ -108,14 +90,12 @@ export const deleteUser = async (
     throw new AppError("Unauthorized.", 401);
   }
 
-  // Find the user
   const user = await User.findByPk(id);
 
   if (!user) {
     throw new AppError("User not found.", 404);
   }
 
-  // Prevent admin from deleting their own account
   if (Number(id) === adminId) {
     throw new AppError(
       "You cannot delete your own admin account.",
@@ -123,7 +103,6 @@ export const deleteUser = async (
     );
   }
 
-  // Check whether the user has existing orders
   const order = await Order.findOne({
     where: {
       userId: id,
@@ -137,7 +116,6 @@ export const deleteUser = async (
     );
   }
 
-  // Delete the user
   await user.destroy();
 
   res.status(200).json({

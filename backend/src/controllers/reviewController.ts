@@ -8,25 +8,10 @@ export const createReview = async (
   res: Response
 ): Promise<void> => {
   const userId = req.user?.id;
+  const { productId, rating, comment } = req.body;
 
   if (!userId) {
     throw new AppError("Unauthorized.", 401);
-  }
-
-  const { productId, rating, comment } = req.body;
-
-  if (!productId || !rating || !comment) {
-    throw new AppError(
-      "Product ID, rating, and comment are required.",
-      400
-    );
-  }
-
-  if (rating < 1 || rating > 5) {
-    throw new AppError(
-      "Rating must be between 1 and 5.",
-      400
-    );
   }
 
   const product = await Product.findByPk(productId);
@@ -62,7 +47,6 @@ export const createReview = async (
   });
 };
 
-
 export const getProductReviews = async (
   req: Request,
   res: Response
@@ -86,7 +70,6 @@ export const getProductReviews = async (
   });
 };
 
-
 export const updateReview = async (
   req: Request,
   res: Response
@@ -97,20 +80,6 @@ export const updateReview = async (
 
   if (!userId) {
     throw new AppError("Unauthorized.", 401);
-  }
-
-  if (!rating || !comment) {
-    throw new AppError(
-      "Rating and comment are required.",
-      400
-    );
-  }
-
-  if (rating < 1 || rating > 5) {
-    throw new AppError(
-      "Rating must be between 1 and 5.",
-      400
-    );
   }
 
   const review = await Review.findByPk(reviewId);
@@ -136,7 +105,6 @@ export const updateReview = async (
     review,
   });
 };
-
 
 export const deleteReview = async (
   req: Request,

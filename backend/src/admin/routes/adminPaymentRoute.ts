@@ -2,6 +2,9 @@ import { Router } from "express";
 
 import { authenticate } from "../../middleware/auth";
 import { requireAdmin } from "../../middleware/authorization";
+import validate from "../../middleware/validate";
+
+import { updatePaymentStatusSchema } from "../../validation/adminPaymentValidation";
 
 import {
   getAllPayments,
@@ -34,7 +37,6 @@ router.get(
   requireAdmin,
   getAllPayments
 );
-
 
 /**
  * @swagger
@@ -69,7 +71,6 @@ router.get(
   requireAdmin,
   getPaymentById
 );
-
 
 /**
  * @swagger
@@ -120,6 +121,7 @@ router.put(
   "/:id/status",
   authenticate,
   requireAdmin,
+  validate(updatePaymentStatusSchema),
   updatePaymentStatus
 );
 

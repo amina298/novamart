@@ -1,5 +1,11 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth";
+import validate from "../middleware/validate";
+
+import {
+  createReviewSchema,
+  updateReviewSchema,
+} from "../validation/reviewValidation";
 
 import {
   createReview,
@@ -54,9 +60,9 @@ const router = Router();
 router.post(
   "/",
   authenticate,
+  validate(createReviewSchema),
   createReview
 );
-
 
 /**
  * @swagger
@@ -82,7 +88,6 @@ router.get(
   "/product/:productId",
   getProductReviews
 );
-
 
 /**
  * @swagger
@@ -133,9 +138,9 @@ router.get(
 router.put(
   "/:id",
   authenticate,
+  validate(updateReviewSchema),
   updateReview
 );
-
 
 /**
  * @swagger

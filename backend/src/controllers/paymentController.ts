@@ -10,34 +10,16 @@ export const createPayment = async (
   const userId = req.user?.id;
   const { orderId, paymentMethod } = req.body;
 
-  // Check authentication
   if (!userId) {
     throw new AppError("Unauthorized.", 401);
   }
 
-  // Validate required fields
-  if (!orderId || !paymentMethod) {
-    throw new AppError(
-      "Order ID and payment method are required.",
-      400
-    );
-  }
-
-  // Validate payment method
-  const allowedMethods = ["mpesa", "card", "cash"];
-
-  if (!allowedMethods.includes(paymentMethod)) {
-    throw new AppError("Invalid payment method.", 400);
-  }
-
-  // Find the order
   const order = await Order.findByPk(orderId);
 
   if (!order) {
     throw new AppError("Order not found.", 404);
   }
 
-  // Make sure the order belongs to the logged-in user
   if (order.userId !== userId) {
     throw new AppError(
       "You cannot pay for this order.",
@@ -45,7 +27,6 @@ export const createPayment = async (
     );
   }
 
-  // Cancelled orders cannot be paid
   if (order.status === "cancelled") {
     throw new AppError(
       "Cancelled orders cannot be paid.",
@@ -53,7 +34,6 @@ export const createPayment = async (
     );
   }
 
-  // Check if the order already has a payment
   const existingPayment = await Payment.findOne({
     where: {
       orderId: order.id,
@@ -67,7 +47,6 @@ export const createPayment = async (
     );
   }
 
-  // Create payment using the order total
   const payment = await Payment.create({
     orderId: order.id,
     amount: order.total,
@@ -81,14 +60,12 @@ export const createPayment = async (
   });
 };
 
-
 export const getMyPayments = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const userId = req.user?.id;
 
-  // Check authentication
   if (!userId) {
     throw new AppError("Unauthorized.", 401);
   }
@@ -109,7 +86,6 @@ export const getMyPayments = async (
   });
 };
 
-
 export const getMyPaymentById = async (
   req: Request,
   res: Response
@@ -117,7 +93,6 @@ export const getMyPaymentById = async (
   const userId = req.user?.id;
   const id = req.params.id as string;
 
-  // Check authentication
   if (!userId) {
     throw new AppError("Unauthorized.", 401);
   }

@@ -1,5 +1,8 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth";
+import validate from "../middleware/validate";
+import { createPaymentSchema } from "../validation/paymentValidation";
+
 import {
   createPayment,
   getMyPayments,
@@ -32,6 +35,9 @@ const router = Router();
  *                 example: 7
  *               paymentMethod:
  *                 type: string
+ *                 enum:
+ *                   - mpesa
+ *                   - card
  *                 example: mpesa
  *     responses:
  *       201:
@@ -45,8 +51,12 @@ const router = Router();
  *       404:
  *         description: Order not found
  */
-router.post("/", authenticate, createPayment);
-
+router.post(
+  "/",
+  authenticate,
+  validate(createPaymentSchema),
+  createPayment
+);
 
 /**
  * @swagger
@@ -63,8 +73,11 @@ router.post("/", authenticate, createPayment);
  *       401:
  *         description: Unauthorized
  */
-router.get("/", authenticate, getMyPayments);
-
+router.get(
+  "/",
+  authenticate,
+  getMyPayments
+);
 
 /**
  * @swagger
@@ -90,6 +103,10 @@ router.get("/", authenticate, getMyPayments);
  *       404:
  *         description: Payment not found
  */
-router.get("/:id", authenticate, getMyPaymentById);
+router.get(
+  "/:id",
+  authenticate,
+  getMyPaymentById
+);
 
 export default router;

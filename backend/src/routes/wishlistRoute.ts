@@ -6,6 +6,8 @@ import {
   getMyWishlist,
   removeFromWishlist,
 } from "../controllers/wishlistController";
+import validate from "../middleware/validate";
+import { addToWishlistSchema } from "../validation/wishListValidation";
 
 const router = Router();
 
@@ -43,9 +45,9 @@ const router = Router();
 router.post(
   "/",
   authenticate,
+  validate(addToWishlistSchema),
   addToWishlist
 );
-
 
 /**
  * @swagger

@@ -14,10 +14,6 @@ export const addToWishlist = async (
     throw new AppError("Unauthorized.", 401);
   }
 
-  if (!productId) {
-    throw new AppError("Product ID is required.", 400);
-  }
-
   const product = await Product.findByPk(productId);
 
   if (!product) {
@@ -49,7 +45,6 @@ export const addToWishlist = async (
   });
 };
 
-
 export const getMyWishlist = async (
   req: Request,
   res: Response
@@ -70,7 +65,6 @@ export const getMyWishlist = async (
     wishlist,
   });
 };
-
 
 export const removeFromWishlist = async (
   req: Request,

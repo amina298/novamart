@@ -5,31 +5,32 @@ import { requireAdmin } from "../../middleware/authorization";
 import validate from "../../middleware/validate";
 
 import {
-  createProductSchema,
-  updateProductSchema,
-} from "../../validation/adminProductValidation";
+  createCategorySchema,
+  updateCategorySchema,
+} from "../../validation/adminCategoryValidation";
 
 import {
-  getAllProducts,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-} from "../controllers/adminProductController";
+  getAllCategories,
+  getCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+} from "../controllers/adminCategoryController";
 
 const router = Router();
 
 /**
  * @swagger
- * /api/admin/products:
+ * /api/admin/categories:
  *   get:
- *     summary: Get all products
+ *     summary: Get all categories
  *     tags:
- *       - Admin Products
+ *       - Admin Categories
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Products retrieved successfully
+ *         description: Categories retrieved successfully
  *       401:
  *         description: Unauthorized
  *       403:
@@ -39,16 +40,50 @@ router.get(
   "/",
   authenticate,
   requireAdmin,
-  getAllProducts
+  getAllCategories
 );
 
 /**
  * @swagger
- * /api/admin/products:
- *   post:
- *     summary: Create a new product
+ * /api/admin/categories/{id}:
+ *   get:
+ *     summary: Get a category by ID
  *     tags:
- *       - Admin Products
+ *       - Admin Categories
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Category ID
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Category retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: Category not found
+ */
+router.get(
+  "/:id",
+  authenticate,
+  requireAdmin,
+  getCategoryById
+);
+
+/**
+ * @swagger
+ * /api/admin/categories:
+ *   post:
+ *     summary: Create a new category
+ *     tags:
+ *       - Admin Categories
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -60,56 +95,50 @@ router.get(
  *             required:
  *               - name
  *               - description
- *               - price
- *               - stock
  *             properties:
  *               name:
  *                 type: string
- *                 example: iPhone 15
+ *                 example: Smartphones
  *               description:
  *                 type: string
- *                 example: Latest Apple smartphone
- *               price:
- *                 type: number
- *                 example: 1200
- *               stock:
- *                 type: integer
- *                 example: 10
+ *                 example: Mobile phones and smartphones
  *     responses:
  *       201:
- *         description: Product created successfully
+ *         description: Category created successfully
  *       400:
- *         description: Invalid product data
+ *         description: Invalid category data
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Admin access required
+ *       409:
+ *         description: Category already exists
  */
 router.post(
   "/",
   authenticate,
   requireAdmin,
-  validate(createProductSchema),
-  createProduct
+  validate(createCategorySchema),
+  createCategory
 );
 
 /**
  * @swagger
- * /api/admin/products/{id}:
+ * /api/admin/categories/{id}:
  *   put:
- *     summary: Update a product
+ *     summary: Update a category
  *     tags:
- *       - Admin Products
+ *       - Admin Categories
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: Product ID
+ *         description: Category ID
  *         schema:
  *           type: integer
- *         example: 2
+ *         example: 1
  *     requestBody:
  *       required: true
  *       content:
@@ -119,75 +148,67 @@ router.post(
  *             required:
  *               - name
  *               - description
- *               - price
- *               - stock
  *             properties:
  *               name:
  *                 type: string
- *                 example: Updated iPhone 15
+ *                 example: Electronics
  *               description:
  *                 type: string
- *                 example: Updated product description
- *               price:
- *                 type: number
- *                 example: 1100
- *               stock:
- *                 type: integer
- *                 example: 15
+ *                 example: Electronic devices and accessories
  *     responses:
  *       200:
- *         description: Product updated successfully
+ *         description: Category updated successfully
  *       400:
- *         description: Invalid product data
+ *         description: Invalid category data
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Admin access required
  *       404:
- *         description: Product not found
+ *         description: Category not found
+ *       409:
+ *         description: Category name already exists
  */
 router.put(
   "/:id",
   authenticate,
   requireAdmin,
-  validate(updateProductSchema),
-  updateProduct
+  validate(updateCategorySchema),
+  updateCategory
 );
 
 /**
  * @swagger
- * /api/admin/products/{id}:
+ * /api/admin/categories/{id}:
  *   delete:
- *     summary: Delete a product
+ *     summary: Delete a category
  *     tags:
- *       - Admin Products
+ *       - Admin Categories
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: Product ID
+ *         description: Category ID
  *         schema:
  *           type: integer
- *         example: 2
+ *         example: 1
  *     responses:
  *       200:
- *         description: Product deleted successfully
- *       400:
- *         description: Cannot delete a product that has been ordered
+ *         description: Category deleted successfully
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Admin access required
  *       404:
- *         description: Product not found
+ *         description: Category not found
  */
 router.delete(
   "/:id",
   authenticate,
   requireAdmin,
-  deleteProduct
+  deleteCategory
 );
 
 export default router;

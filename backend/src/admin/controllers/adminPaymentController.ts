@@ -20,7 +20,6 @@ export const getAllPayments = async (
   });
 };
 
-
 export const getPaymentById = async (
   req: Request,
   res: Response
@@ -44,7 +43,6 @@ export const getPaymentById = async (
   });
 };
 
-
 export const updatePaymentStatus = async (
   req: Request,
   res: Response
@@ -52,25 +50,12 @@ export const updatePaymentStatus = async (
   const id = req.params.id as string;
   const { status } = req.body;
 
-  // Validate required field
-  if (!status) {
-    throw new AppError("Payment status is required.", 400);
-  }
-
-  // Validate payment status
-  const allowedStatuses = ["pending", "paid", "failed"];
-
-  if (!allowedStatuses.includes(status)) {
-    throw new AppError("Invalid payment status.", 400);
-  }
-
   const payment = await Payment.findByPk(id);
 
   if (!payment) {
     throw new AppError("Payment not found.", 404);
   }
 
-  // Paid payments cannot be changed
   if (payment.status === "paid") {
     throw new AppError(
       "Paid payments cannot be changed.",
@@ -78,8 +63,10 @@ export const updatePaymentStatus = async (
     );
   }
 
-  // Failed payments can only be marked as paid
-  if (payment.status === "failed" && status !== "paid") {
+  if (
+    payment.status === "failed" &&
+    status !== "paid"
+  ) {
     throw new AppError(
       "Failed payments can only be marked as paid.",
       400

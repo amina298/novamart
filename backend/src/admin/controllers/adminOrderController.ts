@@ -26,8 +26,6 @@ export const getAllOrders = async (
   });
 };
 
-
-// Get one order by ID
 export const getOrderById = async (
   req: Request,
   res: Response
@@ -56,7 +54,6 @@ export const getOrderById = async (
   });
 };
 
-
 export const updateOrderStatus = async (
   req: Request,
   res: Response
@@ -64,31 +61,12 @@ export const updateOrderStatus = async (
   const id = req.params.id as string;
   const { status } = req.body;
 
-  // Check that status was provided
-  if (!status) {
-    throw new AppError("Status is required.", 400);
-  }
-
-  // Allowed statuses
-  const allowedStatuses = [
-    "pending",
-    "shipped",
-    "delivered",
-    "cancelled",
-  ];
-
-  if (!allowedStatuses.includes(status)) {
-    throw new AppError("Invalid order status.", 400);
-  }
-
-  // Find the order
   const order = await Order.findByPk(id);
 
   if (!order) {
     throw new AppError("Order not found.", 404);
   }
 
-  // Prevent changing a delivered order
   if (order.status === "delivered") {
     throw new AppError(
       "Delivered orders cannot be changed.",
@@ -96,7 +74,6 @@ export const updateOrderStatus = async (
     );
   }
 
-  // Prevent changing a cancelled order
   if (order.status === "cancelled") {
     throw new AppError(
       "Cancelled orders cannot be changed.",
@@ -104,7 +81,6 @@ export const updateOrderStatus = async (
     );
   }
 
-  // Validate order status flow
   if (
     order.status === "pending" &&
     !["shipped", "cancelled"].includes(status)
@@ -125,7 +101,6 @@ export const updateOrderStatus = async (
     );
   }
 
-  // Restore stock if admin cancels the order
   if (status === "cancelled") {
     const orderItems = await OrderItem.findAll({
       where: {
@@ -143,7 +118,6 @@ export const updateOrderStatus = async (
     }
   }
 
-  // Update status
   order.status = status;
 
   await order.save();
@@ -154,21 +128,18 @@ export const updateOrderStatus = async (
   });
 };
 
-
 export const deleteOrder = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const id = req.params.id as string;
 
-  // Find the order
   const order = await Order.findByPk(id);
 
   if (!order) {
     throw new AppError("Order not found.", 404);
   }
 
-  // Only cancelled orders can be deleted
   if (order.status !== "cancelled") {
     throw new AppError(
       "Only cancelled orders can be deleted.",
@@ -176,14 +147,12 @@ export const deleteOrder = async (
     );
   }
 
-  // Delete the order items first
   await OrderItem.destroy({
     where: {
       orderId: order.id,
     },
   });
 
-  // Delete the order
   await order.destroy();
 
   res.status(200).json({
