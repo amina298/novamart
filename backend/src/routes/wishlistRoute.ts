@@ -6,8 +6,10 @@ import {
   getMyWishlist,
   removeFromWishlist,
 } from "../controllers/wishlistController";
+
 import validate from "../middleware/validate";
 import { addToWishlistSchema } from "../validation/wishListValidation";
+import { idParamSchema } from "../validation/paramValidation";
 
 const router = Router();
 
@@ -70,7 +72,6 @@ router.get(
   getMyWishlist
 );
 
-
 /**
  * @swagger
  * /api/wishlist/{id}:
@@ -91,6 +92,8 @@ router.get(
  *     responses:
  *       200:
  *         description: Product removed from wishlist
+ *       400:
+ *         description: Invalid wishlist item ID
  *       401:
  *         description: Unauthorized
  *       403:
@@ -101,6 +104,7 @@ router.get(
 router.delete(
   "/:id",
   authenticate,
+  validate(idParamSchema, "params"),
   removeFromWishlist
 );
 

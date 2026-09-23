@@ -4,6 +4,8 @@ import { authenticate } from "../../middleware/auth";
 import { requireAdmin } from "../../middleware/authorization";
 import validate from "../../middleware/validate";
 
+import { idParamSchema } from "../../validation/paramValidation";
+
 import {
   createCategorySchema,
   updateCategorySchema,
@@ -63,6 +65,8 @@ router.get(
  *     responses:
  *       200:
  *         description: Category retrieved successfully
+ *       400:
+ *         description: Invalid category ID
  *       401:
  *         description: Unauthorized
  *       403:
@@ -74,6 +78,7 @@ router.get(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   getCategoryById
 );
 
@@ -159,7 +164,7 @@ router.post(
  *       200:
  *         description: Category updated successfully
  *       400:
- *         description: Invalid category data
+ *         description: Invalid category data or category ID
  *       401:
  *         description: Unauthorized
  *       403:
@@ -173,6 +178,7 @@ router.put(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   validate(updateCategorySchema),
   updateCategory
 );
@@ -197,6 +203,8 @@ router.put(
  *     responses:
  *       200:
  *         description: Category deleted successfully
+ *       400:
+ *         description: Invalid category ID
  *       401:
  *         description: Unauthorized
  *       403:
@@ -208,6 +216,7 @@ router.delete(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   deleteCategory
 );
 

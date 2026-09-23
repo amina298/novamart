@@ -4,6 +4,8 @@ import { authenticate } from "../../middleware/auth";
 import { requireAdmin } from "../../middleware/authorization";
 import validate from "../../middleware/validate";
 
+import { idParamSchema } from "../../validation/paramValidation";
+
 import {
   createProductSchema,
   updateProductSchema,
@@ -138,7 +140,7 @@ router.post(
  *       200:
  *         description: Product updated successfully
  *       400:
- *         description: Invalid product data
+ *         description: Invalid product ID or product data
  *       401:
  *         description: Unauthorized
  *       403:
@@ -150,6 +152,7 @@ router.put(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   validate(updateProductSchema),
   updateProduct
 );
@@ -175,7 +178,7 @@ router.put(
  *       200:
  *         description: Product deleted successfully
  *       400:
- *         description: Cannot delete a product that has been ordered
+ *         description: Invalid product ID or cannot delete product
  *       401:
  *         description: Unauthorized
  *       403:
@@ -187,6 +190,7 @@ router.delete(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   deleteProduct
 );
 

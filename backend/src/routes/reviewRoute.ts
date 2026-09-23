@@ -3,6 +3,11 @@ import { authenticate } from "../middleware/auth";
 import validate from "../middleware/validate";
 
 import {
+  idParamSchema,
+  productIdParamSchema,
+} from "../validation/paramValidation";
+
+import {
   createReviewSchema,
   updateReviewSchema,
 } from "../validation/reviewValidation";
@@ -75,17 +80,21 @@ router.post(
  *       - in: path
  *         name: productId
  *         required: true
+ *         description: Product ID
  *         schema:
  *           type: integer
  *         example: 2
  *     responses:
  *       200:
  *         description: Product reviews retrieved successfully
+ *       400:
+ *         description: Invalid product ID
  *       404:
  *         description: Product not found
  */
 router.get(
   "/product/:productId",
+  validate(productIdParamSchema, "params"),
   getProductReviews
 );
 
@@ -127,7 +136,7 @@ router.get(
  *       200:
  *         description: Review updated successfully
  *       400:
- *         description: Invalid review data
+ *         description: Invalid review data or review ID
  *       401:
  *         description: Unauthorized
  *       403:
@@ -138,6 +147,7 @@ router.get(
 router.put(
   "/:id",
   authenticate,
+  validate(idParamSchema, "params"),
   validate(updateReviewSchema),
   updateReview
 );
@@ -161,6 +171,8 @@ router.put(
  *     responses:
  *       200:
  *         description: Review deleted successfully
+ *       400:
+ *         description: Invalid review ID
  *       401:
  *         description: Unauthorized
  *       403:
@@ -171,6 +183,7 @@ router.put(
 router.delete(
   "/:id",
   authenticate,
+  validate(idParamSchema, "params"),
   deleteReview
 );
 

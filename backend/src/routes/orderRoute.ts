@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth";
+import validate from "../middleware/validate";
+import { idParamSchema } from "../validation/paramValidation";
 
 import {
   createOrder,
@@ -83,6 +85,7 @@ router.get(
 router.get(
   "/:id",
   authenticate,
+  validate(idParamSchema, "params"),
   getOrderById
 );
 
@@ -115,6 +118,7 @@ router.get(
 router.patch(
   "/:id/cancel",
   authenticate,
+  validate(idParamSchema, "params"),
   cancelOrder
 );
 

@@ -4,6 +4,9 @@ import {
   getProduct,
 } from "../controllers/productController";
 
+import validate from "../middleware/validate";
+import { idParamSchema } from "../validation/paramValidation";
+
 const router = Router();
 
 /**
@@ -44,6 +47,10 @@ router.get("/", getProducts);
  *       500:
  *         description: Failed to get product
  */
-router.get("/:id", getProduct);
+router.get(
+  "/:id",
+  validate(idParamSchema, "params"),
+  getProduct
+);
 
 export default router;

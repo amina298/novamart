@@ -6,12 +6,17 @@ interface OrderItemAttributes {
   orderId: number;
   productId: number;
   quantity: number;
+  unitPrice: number;
+  subtotal: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 interface OrderItemCreationAttributes
-  extends Optional<OrderItemAttributes, "id" | "createdAt" | "updatedAt"> {}
+  extends Optional<
+    OrderItemAttributes,
+    "id" | "createdAt" | "updatedAt"
+  > {}
 
 class OrderItem
   extends Model<OrderItemAttributes, OrderItemCreationAttributes>
@@ -21,6 +26,8 @@ class OrderItem
   declare orderId: number;
   declare productId: number;
   declare quantity: number;
+  declare unitPrice: number;
+  declare subtotal: number;
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -48,6 +55,16 @@ OrderItem.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1,
+    },
+
+    unitPrice: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+
+    subtotal: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
     },
   },
   {

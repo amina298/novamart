@@ -4,6 +4,7 @@ import { authenticate } from "../../middleware/auth";
 import { requireAdmin } from "../../middleware/authorization";
 import validate from "../../middleware/validate";
 
+import { idParamSchema } from "../../validation/paramValidation";
 import { updatePaymentStatusSchema } from "../../validation/adminPaymentValidation";
 
 import {
@@ -58,6 +59,8 @@ router.get(
  *     responses:
  *       200:
  *         description: Payment retrieved successfully
+ *       400:
+ *         description: Invalid payment ID
  *       401:
  *         description: Unauthorized
  *       403:
@@ -69,6 +72,7 @@ router.get(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   getPaymentById
 );
 
@@ -121,6 +125,7 @@ router.put(
   "/:id/status",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   validate(updatePaymentStatusSchema),
   updatePaymentStatus
 );

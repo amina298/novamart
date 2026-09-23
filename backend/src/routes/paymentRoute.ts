@@ -1,7 +1,12 @@
 import { Router } from "express";
+
 import { authenticate } from "../middleware/auth";
+
 import validate from "../middleware/validate";
+
 import { createPaymentSchema } from "../validation/paymentValidation";
+
+import { idParamSchema } from "../validation/paramValidation";
 
 import {
   createPayment,
@@ -106,6 +111,7 @@ router.get(
 router.get(
   "/:id",
   authenticate,
+  validate(idParamSchema, "params"),
   getMyPaymentById
 );
 

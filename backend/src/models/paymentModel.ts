@@ -44,6 +44,7 @@ Payment.init(
     orderId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      unique: true,
     },
 
     amount: {

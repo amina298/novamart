@@ -2,6 +2,7 @@ import { Router } from "express";
 import { loginUser } from "../controllers/Login";
 import validate from "../middleware/validate";
 import { loginSchema } from "../validation/authValidation";
+import loginRateLimiter from "../middleware/rateLimiter";
 
 const router = Router();
 
@@ -40,6 +41,7 @@ const router = Router();
  */
 router.post(
   "/login",
+   loginRateLimiter,
   validate(loginSchema),
   loginUser
 );

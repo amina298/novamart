@@ -4,6 +4,7 @@ import { authenticate } from "../../middleware/auth";
 import { requireAdmin } from "../../middleware/authorization";
 import validate from "../../middleware/validate";
 
+import { idParamSchema } from "../../validation/paramValidation";
 import { updateOrderStatusSchema } from "../../validation/adminOrderValidation";
 
 import {
@@ -59,6 +60,8 @@ router.get(
  *     responses:
  *       200:
  *         description: Order retrieved successfully
+ *       400:
+ *         description: Invalid order ID
  *       401:
  *         description: Unauthorized
  *       403:
@@ -70,6 +73,7 @@ router.get(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   getOrderById
 );
 
@@ -111,7 +115,7 @@ router.get(
  *       200:
  *         description: Order status updated successfully
  *       400:
- *         description: Invalid order status or order cannot be updated
+ *         description: Invalid order ID or order status
  *       401:
  *         description: Unauthorized
  *       403:
@@ -123,6 +127,7 @@ router.put(
   "/:id/status",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   validate(updateOrderStatusSchema),
   updateOrderStatus
 );
@@ -148,7 +153,7 @@ router.put(
  *       200:
  *         description: Order deleted successfully
  *       400:
- *         description: Order cannot be deleted
+ *         description: Invalid order ID or order cannot be deleted
  *       401:
  *         description: Unauthorized
  *       403:
@@ -160,6 +165,7 @@ router.delete(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   deleteOrder
 );
 

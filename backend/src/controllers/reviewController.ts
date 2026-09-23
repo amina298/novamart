@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import Review from "../models/reviewModel";
 import Product from "../models/productModel";
+import Order from "../models/orderModel";
+import OrderItem from "../models/orderItemModel";
+import Payment from "../models/paymentModel";
 import AppError from "../utils/AppError";
 
 export const createReview = async (
@@ -14,12 +17,47 @@ export const createReview = async (
     throw new AppError("Unauthorized.", 401);
   }
 
+  // Check that the product exists
   const product = await Product.findByPk(productId);
 
   if (!product) {
     throw new AppError("Product not found.", 404);
   }
 
+  // Check that the customer purchased this product
+  // through a successfully paid order.
+  const purchasedProduct = await OrderItem.findOne({
+    where: {
+      productId,
+    },
+    include: [
+      {
+        model: Order,
+        required: true,
+        where: {
+          userId,
+        },
+        include: [
+          {
+            model: Payment,
+            required: true,
+            where: {
+              status: "paid",
+            },
+          },
+        ],
+      },
+    ],
+  });
+
+  if (!purchasedProduct) {
+    throw new AppError(
+      "You can only review products you have purchased.",
+      403
+    );
+  }
+
+  // Check if the customer has already reviewed this product
   const existingReview = await Review.findOne({
     where: {
       userId,
@@ -34,6 +72,7 @@ export const createReview = async (
     );
   }
 
+  // Create the review
   const review = await Review.create({
     userId,
     productId,

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth";
+
 import {
   getCart,
   addToCart,
@@ -7,11 +8,15 @@ import {
   removeCartItem,
   clearCart,
 } from "../controllers/cartController";
+
 import validate from "../middleware/validate";
+
 import {
   addToCartSchema,
   updateCartItemSchema,
 } from "../validation/cartValidation";
+
+import { idParamSchema } from "../validation/paramValidation";
 
 const router = Router();
 
@@ -37,7 +42,6 @@ router.get(
   authenticate,
   getCart
 );
-
 
 /**
  * @swagger
@@ -80,7 +84,6 @@ router.post(
   validate(addToCartSchema),
   addToCart
 );
-
 
 /**
  * @swagger
@@ -125,10 +128,10 @@ router.post(
 router.put(
   "/items/:id",
   authenticate,
+  validate(idParamSchema, "params"),
   validate(updateCartItemSchema),
   updateCartItem
 );
-
 
 /**
  * @swagger
@@ -149,6 +152,8 @@ router.put(
  *     responses:
  *       200:
  *         description: Cart item removed successfully
+ *       400:
+ *         description: Invalid cart item ID
  *       401:
  *         description: Unauthorized
  *       403:
@@ -159,9 +164,9 @@ router.put(
 router.delete(
   "/items/:id",
   authenticate,
+  validate(idParamSchema, "params"),
   removeCartItem
 );
-
 
 /**
  * @swagger

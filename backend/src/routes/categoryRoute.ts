@@ -4,6 +4,9 @@ import {
   getCategory,
 } from "../controllers/categoryController";
 
+import validate from "../middleware/validate";
+import { idParamSchema } from "../validation/paramValidation";
+
 const router = Router();
 
 /**
@@ -18,7 +21,6 @@ const router = Router();
  *         description: Categories retrieved successfully
  */
 router.get("/", getCategories);
-
 
 /**
  * @swagger
@@ -37,9 +39,15 @@ router.get("/", getCategories);
  *     responses:
  *       200:
  *         description: Category retrieved successfully
+ *       400:
+ *         description: Invalid category ID
  *       404:
  *         description: Category not found
  */
-router.get("/:id", getCategory);
+router.get(
+  "/:id",
+  validate(idParamSchema, "params"),
+  getCategory
+);
 
 export default router;

@@ -9,32 +9,26 @@ export const loginUser = async (
   res: Response
 ): Promise<void> => {
   const { email, password } = req.body;
-  console.log("Email:", email);
-console.log("Password:", password);
 
   const user = await User.findOne({
     where: {
       email,
     },
   });
-  console.log("User found:", user?.id);
 
   if (!user) {
     throw new AppError("Invalid email or password.", 401);
   }
 
- const isPasswordValid = await bcrypt.compare(
-  password,
-  user.password
-);
+  const isPasswordValid = await bcrypt.compare(
+    password,
+    user.password
+  );
 
-console.log("Password valid:", isPasswordValid);
+  if (!isPasswordValid) {
+    throw new AppError("Invalid email or password.", 401);
+  }
 
-if (!isPasswordValid) {
-  throw new AppError("Invalid email or password.", 401);
-}
-
-  console.log("Creating JWT...");
   const token = jwt.sign(
     {
       id: user.id,
@@ -46,7 +40,6 @@ if (!isPasswordValid) {
       expiresIn: "7d",
     }
   );
-  console.log("JWT created successfully");
 
   res.status(200).json({
     message: "Login successful.",

@@ -14,6 +14,10 @@ import "./models/association";
 
 dotenv.config();
 
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET is not defined.");
+}
+
 const PORT = Number(process.env.PORT) || 5000;
 
 const startServer = async (): Promise<void> => {

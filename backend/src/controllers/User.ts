@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
+
 import User from "../models/User";
+import Cart from "../models/cartModel";
+import { sequelize } from "../config/sequelize";
 import AppError from "../utils/AppError";
 
 export const registerUser = async (
@@ -19,16 +22,37 @@ export const registerUser = async (
     throw new AppError("Email already exists.", 409);
   }
 
-  // Hash the password
+  // Hash the password before storing it
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Create the user
-  const user = await User.create({
-    firstName,
-    lastName,
-    email,
-    password: hashedPassword,
-    phone,
+  /*
+   * Create the user and cart inside one transaction.
+   *
+   * If either operation fails, both operations
+   * are rolled back.
+   */
+  const user = await sequelize.transaction(async (transaction) => {
+    // Create the user
+    const newUser = await User.create(
+      {
+        firstName,
+        lastName,
+        email,
+        password: hashedPassword,
+        phone,
+      },
+      { transaction }
+    );
+
+    // Create an empty cart for the new user
+    await Cart.create(
+      {
+        userId: newUser.id,
+      },
+      { transaction }
+    );
+
+    return newUser;
   });
 
   // Send success response
@@ -45,7 +69,6 @@ export const registerUser = async (
     },
   });
 };
-
 
 export const getProfile = (
   req: Request,
@@ -87,8 +110,6 @@ export const updateProfile = async (
     },
   });
 };
-
-
 
 export const deleteProfile = async (
   req: Request,

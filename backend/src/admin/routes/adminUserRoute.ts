@@ -4,6 +4,7 @@ import { authenticate } from "../../middleware/auth";
 import { requireAdmin } from "../../middleware/authorization";
 import validate from "../../middleware/validate";
 
+import { idParamSchema } from "../../validation/paramValidation";
 import { updateUserSchema } from "../../validation/adminUserValidation";
 
 import {
@@ -59,6 +60,8 @@ router.get(
  *     responses:
  *       200:
  *         description: User retrieved successfully
+ *       400:
+ *         description: Invalid user ID
  *       401:
  *         description: Unauthorized
  *       403:
@@ -70,6 +73,7 @@ router.get(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   getUserById
 );
 
@@ -126,7 +130,7 @@ router.get(
  *       200:
  *         description: User updated successfully
  *       400:
- *         description: Invalid user data
+ *         description: Invalid user ID or user data
  *       401:
  *         description: Unauthorized
  *       403:
@@ -138,6 +142,7 @@ router.put(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   validate(updateUserSchema),
   updateUser
 );
@@ -163,7 +168,7 @@ router.put(
  *       200:
  *         description: User deleted successfully
  *       400:
- *         description: User cannot be deleted
+ *         description: Invalid user ID or user cannot be deleted
  *       401:
  *         description: Unauthorized
  *       403:
@@ -175,6 +180,7 @@ router.delete(
   "/:id",
   authenticate,
   requireAdmin,
+  validate(idParamSchema, "params"),
   deleteUser
 );
 

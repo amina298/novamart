@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import Product from "../../models/productModel";
 import OrderItem from "../../models/orderItemModel";
+import CartItem from "../../models/cartItemModel";
+import Review from "../../models/reviewModel";
+import Wishlist from "../../models/wishlistModel";
 import AppError from "../../utils/AppError";
 
 export const getAllProducts = async (
@@ -82,6 +85,7 @@ export const deleteProduct = async (
     throw new AppError("Product not found.", 404);
   }
 
+  // Check purchase history
   const orderItem = await OrderItem.findOne({
     where: {
       productId: id,
@@ -91,6 +95,48 @@ export const deleteProduct = async (
   if (orderItem) {
     throw new AppError(
       "Cannot delete a product that has been ordered.",
+      400
+    );
+  }
+
+  // Check customer's carts
+  const cartItem = await CartItem.findOne({
+    where: {
+      productId: id,
+    },
+  });
+
+  if (cartItem) {
+    throw new AppError(
+      "Cannot delete a product that is currently in a customer's cart.",
+      400
+    );
+  }
+
+  // Check customer reviews
+  const review = await Review.findOne({
+    where: {
+      productId: id,
+    },
+  });
+
+  if (review) {
+    throw new AppError(
+      "Cannot delete a product that has reviews.",
+      400
+    );
+  }
+
+  // Check customer wishlists
+  const wishlist = await Wishlist.findOne({
+    where: {
+      productId: id,
+    },
+  });
+
+  if (wishlist) {
+    throw new AppError(
+      "Cannot delete a product that is in a customer's wishlist.",
       400
     );
   }
