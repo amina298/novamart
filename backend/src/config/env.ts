@@ -9,6 +9,7 @@ const requiredEnvVariables = [
   "DB_HOST",
   "DB_PORT",
   "JWT_SECRET",
+  "FRONTEND_URLS",
 ];
 
 for (const variable of requiredEnvVariables) {
@@ -25,4 +26,9 @@ export const env = {
   DB_PORT: Number(process.env.DB_PORT),
   JWT_SECRET: process.env.JWT_SECRET as string,
   PORT: Number(process.env.PORT) || 5000,
+
+  FRONTEND_URLS: (process.env.FRONTEND_URLS as string)
+    .split(",")
+    .map((url) => url.trim())
+    .filter(Boolean),
 };

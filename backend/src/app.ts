@@ -18,12 +18,19 @@ import adminPaymentRoutes from "./admin/routes/adminPaymentRoute";
 import reviewRoutes from "./routes/reviewRoute";
 import wishlistRoutes from "./routes/wishlistRoute";
 import errorHandler from "./middleware/errorHandler";
+import { env } from "./config/env";
 
 const app = express();
 
 app.use(helmet());
 
-app.use(cors());
+app.use(
+  cors({
+    origin: env.FRONTEND_URLS,
+  })
+);
+
+app.use(express.json());
 app.use(express.json());
 
 app.use("/api/users", userRoutes);
