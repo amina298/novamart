@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { env } from "../config/env";
 
 export const authenticate = (
   req: Request,
@@ -31,7 +32,7 @@ export const authenticate = (
   try {
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET as string,
+      env.JWT_SECRET,
       {
         algorithms: ["HS256"],
       }

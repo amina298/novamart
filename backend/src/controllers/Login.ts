@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
 import AppError from "../utils/AppError";
+import { env } from "../config/env";
 
 export const loginUser = async (
   req: Request,
@@ -35,7 +36,7 @@ export const loginUser = async (
       email: user.email,
       role: user.role,
     },
-    process.env.JWT_SECRET as string,
+    env.JWT_SECRET,
     {
       expiresIn: "7d",
     }

@@ -1,6 +1,6 @@
-import dotenv from "dotenv";
 import app from "./app";
 import { connectDatabase, sequelize } from "./config/sequelize";
+import { env } from "./config/env";
 
 import "./models/User";
 import "./models/productModel";
@@ -12,18 +12,11 @@ import "./models/paymentModel";
 import "./models/reviewModel";
 import "./models/association";
 
-dotenv.config();
-
-if (!process.env.JWT_SECRET) {
-  throw new Error("JWT_SECRET is not defined.");
-}
-
-const PORT = Number(process.env.PORT) || 5000;
+const PORT = env.PORT;
 
 const startServer = async (): Promise<void> => {
   await connectDatabase();
 
-  // Synchronize all models with the database
   await sequelize.sync();
 
   app.listen(PORT, () => {
