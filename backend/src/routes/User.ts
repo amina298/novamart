@@ -9,7 +9,12 @@ import {
 
 import { authenticate } from "../middleware/auth";
 import validate from "../middleware/validate";
-import { registerUserSchema, updateProfileSchema } from "../validation/userValidation";
+import registerRateLimiter from "../middleware/registerRateLimiter";
+
+import {
+  registerUserSchema,
+  updateProfileSchema,
+} from "../validation/userValidation";
 
 const router = Router();
 
@@ -57,9 +62,15 @@ const router = Router();
  *         description: All fields are required
  *       409:
  *         description: Email already exists
+ *       429:
+ *         description: Too many registration attempts
  */
-router.post("/register",  validate(registerUserSchema), registerUser);
-
+router.post(
+  "/register",
+  registerRateLimiter,
+  validate(registerUserSchema),
+  registerUser
+);
 
 /**
  * @swagger
@@ -75,13 +86,14 @@ router.post("/register",  validate(registerUserSchema), registerUser);
  *         description: User profile retrieved successfully
  *       401:
  *         description: Unauthorized
+ *       404:
+ *         description: User not found
  */
 router.get(
   "/profile",
   authenticate,
   getProfile
 );
-
 
 /**
  * @swagger
@@ -125,10 +137,9 @@ router.get(
 router.put(
   "/profile",
   authenticate,
-   validate(updateProfileSchema),
+  validate(updateProfileSchema),
   updateProfile
 );
-
 
 /**
  * @swagger

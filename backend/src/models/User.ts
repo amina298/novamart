@@ -66,10 +66,11 @@ User.init(
       allowNull: false,
     },
 
-    phone: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
+   phone: {
+  type: DataTypes.STRING,
+  allowNull: false,
+  unique: true,
+},
 
     role: {
       type: DataTypes.ENUM("customer", "admin"),

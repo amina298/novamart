@@ -22,6 +22,15 @@ export const registerUser = async (
     throw new AppError("Email already exists.", 409);
   }
 
+  // Check if phone number already exists
+  const existingPhone = await User.findOne({
+    where: { phone },
+  });
+
+  if (existingPhone) {
+    throw new AppError("Phone number already exists.", 409);
+  }
+
   // Hash the password before storing it
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -89,6 +98,15 @@ export const updateProfile = async (
 
   if (!user) {
     throw new AppError("User not found.", 404);
+  }
+
+  // Check if the phone number is already used by another user
+  const existingPhone = await User.findOne({
+    where: { phone },
+  });
+
+  if (existingPhone && existingPhone.id !== user.id) {
+    throw new AppError("Phone number already exists.", 409);
   }
 
   user.firstName = firstName;
